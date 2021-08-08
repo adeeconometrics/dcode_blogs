@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang=" en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Elements of Programming: Fundamental Data Structures | Explorations in Computer Science</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="Elements of Programming: Fundamental Data Structures" />
+<meta name="author" content="Dave Amiana" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="There are two general ways of looking at data structures: concept and implementation. Ideally, they should serve you the sense in selecting an effective data structure for a given problem. Fundamental data structures manifest themselves naturally in most situations. The problem usually demands a certain data structure, while others could be represented in different ways. An effective data structure should simplify the problem. But that is only half of the story since a data structure must also ensure computational efficiency. We can simplify the problem by conceptually looking for an apt data structure while performance benefits are obtained by looking into the implementation." />
+<meta property="og:description" content="There are two general ways of looking at data structures: concept and implementation. Ideally, they should serve you the sense in selecting an effective data structure for a given problem. Fundamental data structures manifest themselves naturally in most situations. The problem usually demands a certain data structure, while others could be represented in different ways. An effective data structure should simplify the problem. But that is only half of the story since a data structure must also ensure computational efficiency. We can simplify the problem by conceptually looking for an apt data structure while performance benefits are obtained by looking into the implementation." />
+<link rel="canonical" href="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/20/Elements-of-Programming.html" />
+<meta property="og:url" content="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/20/Elements-of-Programming.html" />
+<meta property="og:site_name" content="Explorations in Computer Science" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-05-20T00:00:00+08:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Elements of Programming: Fundamental Data Structures" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","headline":"Elements of Programming: Fundamental Data Structures","dateModified":"2021-05-20T00:00:00+08:00","datePublished":"2021-05-20T00:00:00+08:00","url":"/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/20/Elements-of-Programming.html","mainEntityOfPage":{"@type":"WebPage","@id":"/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/20/Elements-of-Programming.html"},"author":{"@type":"Person","name":"Dave Amiana"},"description":"There are two general ways of looking at data structures: concept and implementation. Ideally, they should serve you the sense in selecting an effective data structure for a given problem. Fundamental data structures manifest themselves naturally in most situations. The problem usually demands a certain data structure, while others could be represented in different ways. An effective data structure should simplify the problem. But that is only half of the story since a data structure must also ensure computational efficiency. We can simplify the problem by conceptually looking for an apt data structure while performance benefits are obtained by looking into the implementation.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/https://adeeconometrics.github.io/dcode_blogs/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="/https://adeeconometrics.github.io/dcode_blogs/feed.xml" title="Explorations in Computer Science" />
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/https://adeeconometrics.github.io/dcode_blogs/%20/">Explorations in Computer Science</a><nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+      <label for="nav-trigger">
+        <span class="menu-icon">
+          <svg viewBox="0 0 18 15" width="18px" height="15px">
+            <path
+              d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z" />
+          </svg>
+        </span>
+      </label>
+
+      <div class="trigger"><a class="page-link" href="/https://adeeconometrics.github.io/dcode_blogs/about/">About my Blogs</a></div>
+    </nav>
+    <script type="text/x-mathjax-config">
+                MathJax.Hub.Config({
+                TeX: { equationNumbers: { autoNumber: "AMS" } }
+                });
+              </script>
+    <script type="text/javascript" async
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+  </div>
+</header><main class="page-content" aria-label="Content">
+    <div class="wrapper">
+      <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Elements of Programming: Fundamental Data Structures</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2021-05-20T00:00:00+08:00" itemprop="datePublished">
+        May 20, 2021
+      </time>• 
+      <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-author h-card" itemprop="name">Dave Amiana</span></span></p>
+    
+    <p id="page-subtitle" class="page__subtitle p-name" itemprop="headline">
+      Data Structures underlie everything we do in computer science: understanding them is critical to writing rigorous software and effective algorithms.
+    </p>
+    
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>There are two general ways of looking at data structures: concept and implementation. Ideally, they should serve you the sense in selecting an effective data structure for a given problem. Fundamental data structures manifest themselves naturally in most situations. The problem usually demands a certain data structure, while others could be represented in different ways. An effective data structure should simplify the problem. But that is only half of the story since a data structure must also ensure computational efficiency. We can simplify the problem by conceptually looking for an apt data structure while performance benefits are obtained by looking into the implementation.</p>
+
+<p>Now that we are familiar with the essence of looking at the two broad lenses in selecting a data structure, I should formally introduce you to the characters. We can view data structures from abstraction — that we shall call from hereon then as Abstract Data Type — and implementation.</p>
+
+<p>An Abstract Data Types (ADT) ought to describe a set of functionalities in a given data structure — they are written in a declarative manner. It is close to an algebraic structure in mathematics that outlines the rules and operations in a particular context [1]. The inspirations from mathematics are established within a class that contains a collection of values, and behaviors that support the operations that we can do within a structure. Such an abstract model hides the implementation logic. ADT is language-agnostic as it only describes the prototype of a data structure.</p>
+
+<pre><code class="language-None">List:
+  - add -&gt; adds an element on the list
+  - remove -&gt; removes an element on the list
+  - sort -&gt; sort the list in order 
+  - search -&gt; search a value on the list. If value is found, return true. 
+  - display -&gt; display list traversal
+</code></pre>
+
+<hr />
+<p>In programming a data structure with an abstract model (ADT), a good practice is to establish <a href="https://en.wikipedia.org/wiki/Loose_coupling">loose coupling</a> between modules that contain the ADT and the implementation specifics. The purpose is to maintain a conceptual map between programming logic and functionalities which improves the maintainability of our system.</p>
+
+<p>Below is an example of implementing an ADT inside a language which in this case is C++ because the Standard Template Library (STL) is deemed mature and state of the art, it is a good reference for reading a good piece of software. However, due to its nuances and technical sophistication, we will only base our discussion on one of the core concepts of STL: containers.</p>
+
+<p>Keeping this in a separate module improves maintainability and clarifies the intention of the developer before they implement the logic specific to that functionality. Do not worry about the new word singly-linked list because we would not talk about that here. For now, focus on how we wrote our ADT for describing the operations of the data structure — which in this case is a List.</p>
+
+<pre><code class="language-C++"># pragma once
+
+// ADT of singly-linked list
+class List{
+  private:
+    struct Node{
+      int data;
+      Node *next;
+    };
+
+    Node *head;
+  
+  public:
+    explicit List();
+    ~List();
+    void add(Node _node);
+    void remove(Node _node);
+    void sort();
+    void display();
+    void clear();
+  
+    bool is_empty();
+    bool is_element(Node _node);
+
+};
+</code></pre>
+
+<hr />
+<p>Meanwhile, the implementation specifics contain the quirks and tricks that ensure the operations ascribed in the ADT. From this perspective, it is important to know the quirks of your language to know the techniques that ensure safety and efficiency, such as referencing and memory management in languages like C/C++. For this matter, implementing the concepts defined in ADT closely works with the language; the programmer must be technically adept in the language.</p>
+
+<p>In practice, these two lenses work together by establishing clarity first, then specifications.</p>
+
+<hr />
+<h1 id="fundamental-data-structures">Fundamental Data Structures</h1>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1618748350087/pFDpTZUal.png" alt="image.png" /></p>
+
+<blockquote>
+  <p>Much like the abstract and practical resemblance of Euclidean geometry to the world, ADT and its Implementation correspond in a manner where the former is purely ideal while the latter is closer with actuality.</p>
+</blockquote>
+
+<p>For this section, we briefly introduce the fundamental data structures and cite some of their use cases. We shall be introduced to the following data structures.</p>
+<ul>
+  <li>List</li>
+  <li>Deque</li>
+  <li>Tree</li>
+  <li>Set</li>
+  <li>Map</li>
+  <li>Graph</li>
+</ul>
+
+<p>Before we delve in a little further, we should keep in mind the Base functionalities of our data structures. The baseline for each structure has to support the following operations: it should be able to search an item, sort, insert, update, and delete items.</p>
+
+<ul>
+  <li>Search − Algorithm to find an item in a data structure.</li>
+  <li>Sort − Algorithm to organize items in a certain order.</li>
+  <li>Insert − Algorithm to insert items in a data structure.</li>
+  <li>Update − Algorithm to update an existing item in a data structure.</li>
+  <li>Delete − Algorithm to remove an existing item from a data structure.</li>
+</ul>
+
+<pre><code class="language-C++">template&lt;typename T&gt;
+class Base{
+	public:
+		Base();
+		virtual ~Base();
+		virtual void search(const T&amp; _element) = 0;
+		virtual void sort() = 0;
+		virtual void insert(const T&amp; _element) = 0;
+		virtual void update() = 0;
+		virtual void delete(const T&amp; _element) = 0;
+};
+</code></pre>
+<hr />
+<h2 id="list">List</h2>
+<p>The list is an abstract data type that represents a countable number of ordered values, where the same value may occur more than once. Lists can be ordered linearly or non-linearly. Non-linear lists can be implemented in a form of a Tree, Graph, or a Map. However, we distinguished them in their respective categories for they, themselves, have their own nuances. List, in this context, pertains to a linear list family.</p>
+
+<p>A list data structure is useful when the notion of order is obtained, a value is allowed to have duplicates, and whenever we would like to do sorting and searching with our data set. The List ADT is implemented in the class of <a href="https://www.cplusplus.com/reference/stl/">Sequence containers</a> in C++ STL. It comprises the following: <code class="language-plaintext highlighter-rouge">array</code>, <code class="language-plaintext highlighter-rouge">vector</code>, <code class="language-plaintext highlighter-rouge">deque</code>, <code class="language-plaintext highlighter-rouge">forwad_list</code>, and <code class="language-plaintext highlighter-rouge">list</code>.</p>
+
+<p>Conceptually, all other data structures can be implemented with lists [2], however, we want to categorize them for the sorts of structures they represent, which is useful for problems we encounter.</p>
+
+<blockquote>
+  <p>This is related to how algorithms are categorized which I laid out here:</p>
+</blockquote>
+
+<p>%[https://dcode.hashnode.dev/making-sense-of-algorithms-general-perspective]</p>
+
+<p>A common structure when we talk about a list is called linked-list (implemented in STL as a list). It is applied in many use-cases such as deriving other structures, the links you visit in a web browser, or music playlists.</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1618748833225/AiGuik0ex.png" alt="image.png" /></p>
+
+<hr />
+<h2 id="deque">Deque</h2>
+
+<p>Deque is a combination of queue and stack since the difference between these data structures is their ordering whereas the queue maintains a FIFO order, the stack keeps a LIFO order. Thus, deque support FIFO and LIFO ordering of a list.</p>
+
+<p>FIFO means first-in, first-out ordering. The most common example would be to think of waiting in line in supermarkets. Sometimes we call this a queue where the policy established is first-come, first-served.</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1618748875863/2u47zCGFS.png" alt="image.png" /></p>
+
+<p>LIFO, on the other hand, stands for last-in, first-out ordering. Think of removing a book from a pile of books. You would have to remove the top book, iteratively until you found the book you want to read.</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1618748897961/bhtYXEoIf.png" alt="image.png" /></p>
+
+<p>Queues are used for maintaining a LIFO order of precedence in processing requests. A great example would be scheduling systems: the processing is done on a first-come, first-serve basis. CPU scheduling systems exploit the LIFO property of the queue [3].</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1618748918810/UPWHykQC-.png" alt="image.png" /></p>
+<blockquote>
+  <p>A sample <a href="https://en.wikipedia.org/wiki/Thread_pool">thread pool</a> (green boxes) with a queue (FIFO) of waiting for tasks (blue) and a queue of completed tasks (yellow).</p>
+</blockquote>
+
+<p>The common use-cases of the stack resonate within the language such as the call stack wherein stack data structure that stores information about the active subroutines of a computer program.</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1618748968929/2haShHIfx.png" alt="image.png" /></p>
+
+<pre><code class="language-C++"># pragma once 
+
+template &lt;typename T&gt;
+class Deque: public Base&lt;T&gt;{
+  private:
+    int size;
+    T* front_reference;
+    T* back_reference;
+  
+  public:
+  Deque();
+  ~Deque();
+  // basic functionalities
+  void search(const T&amp; _element) override;
+  void sort() override;
+  void insert(const T&amp; _element) override;
+  void update() override;
+  void delete(const T&amp; _element) override;
+  // specialized function in Deque container
+  void push_back(const T&amp; _element);
+  void push_front(const T&amp; _element);
+  void pop_back(const T&amp; _element);
+  void pop_front(const T&amp; _element);
+  void front();
+  void back();
+};
+</code></pre>
+<hr />
+<blockquote>
+  <p>Moving on to more specialized data structures since they rely on the previous data structures. This is where it gets so exciting!</p>
+</blockquote>
+
+<h2 id="trees">Trees</h2>
+<p>A tree data structure is used to represent hierarchy or non-linear ordering. We commonly name them with what resembles a family tree. We will go over some common terminologies but keep in mind that it is not exhaustive.</p>
+
+<ul>
+  <li>root — a root node is a starting point of a tree structure. It does not have a parent node.</li>
+  <li>parent — a parent node is an immediate predecessor of a node.</li>
+  <li>child — a child is a successor of a parent node</li>
+  <li>leaf — a leaf is located at the end of the tree. It does not have any children.</li>
+</ul>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1618749099683/K2gKBo-8H.png" alt="image.png" /></p>
+
+<p>There are many versions of trees, and they can be implemented in various ways. It is important to note that although C++ STL does not have a tree container, it does implement sets as a <a href="https://bityl.co/6Mhm">Binary Search Tree</a>.</p>
+
+<p>A binary search tree (BST) is a particular type of tree that maintains a property of allowing only two children per parent node where the left child is always less than the parent while the right child is always greater than the parent [4].</p>
+
+<p>Another kind of tree that is widely used in cryptography is known as the Merkle Tree in which every <a href="https://en.wikipedia.org/wiki/Leaf_node">leaf node</a> is labeled with the <a href="https://en.wikipedia.org/wiki/Leaf_node">cryptographic hash</a> of a data block, and every non-leaf node is labeled with the cryptographic hash of the labels of its child nodes [5].</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1618749178746/ha8It3rEE.png" alt="image.png" /></p>
+
+<p>Compilers and interpreters [6] exploit the hierarchical structure and order of a tree. Parse trees are formal representations of a language that can be understood by computers.</p>
+
+<hr />
+<h2 id="set">Set</h2>
+
+<p>As we mentioned earlier, sets are implemented as trees. Sets are very useful for keeping unique elements in a given list, not to mention that they serve to be the foundation of mathematics — we know this from <a href="https://bityl.co/6Qni">set theory</a>. It follows that advanced mathematical concepts are realized within the structure of the set.</p>
+
+<pre><code class="language-C++"># pragma once
+
+template &lt;typename T&gt;
+class Set{
+  public:
+    Set();
+    ~Set();
+    
+    void display();
+    void insert(const T&amp; _element);
+    void remove(const T&amp; _element);
+  
+    int size();
+  
+    bool is_element(const T&amp; _element);
+    bool is_empty();
+    bool is_disjoint();
+    bool is_subset(const Set&amp; set);
+  
+    Set union(const Set&amp; set);
+    Set intersection(const Set&amp; set);
+    Set complement(const Set&amp; set);
+    Set difference(const Set&amp; set);
+    Set symmetric_difference(const Set&amp; set);
+};
+</code></pre>
+<hr />
+<h2 id="map">Map</h2>
+
+<p>A map is a key-value pair data structure, other languages like Python call them dictionaries. A key is an index that you use to call its corresponding value.</p>
+
+<p>The computer scientist, Brian Kernighan, deemed them as the most useful kind of data structure.
+%[https://youtu.be/qTZJLJ3Gm6Q]</p>
+
+<p>The most notable application of maps is in <a href="https://www.cise.ufl.edu/~mschneid/Research/papers/HS05BoCh.pdf">database systems</a>.</p>
+
+<pre><code class="language-C++"># pragma once
+# include &lt;string&gt;
+
+template&lt;typename T&gt;
+class Map{
+  public:
+    Map();
+    ~Map();
+  
+    void add(const std::string &amp;key, const T&amp; value);
+    void remove(const std::string &amp;key, const T&amp; value);
+    void get_value(const std::string &amp;key);
+    void get_key(const T&amp; value);
+    void display();
+};
+</code></pre>
+<hr />
+<h2 id="graph">Graph</h2>
+<p>Finally, the broadest category of data structure is here!</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1618749384541/ZDis7E-3P.png" alt="image.png" /></p>
+
+<p>A graph is a generalization of Trees. An area of mathematics and computer science is devoted to exploring the universe of graphs. Among my personal favorites is the realization of graph theory in automated theorem proving and some theoretical foundations in Physics, as found in Stephen Wolfram’s project.</p>
+
+<p>Graphs are everywhere, and we can represent nearly all problems with a graph since a tree is a special case of a graph and a linked list is a special case of a tree.</p>
+
+<hr />
+<h1 id="takeaways">Takeaways</h1>
+<p>Now that we covered the fundamental data structures and their use cases, we learned that we can represent problems in various forms of data structure. We also covered the areas of applications where such data structures are found most crucial. And we laid out the abstract model for implementing these data structures. A fun way to explore this area of computer science is to try and implement them on your own.</p>
+
+<p><em>If you want to engage on this topic with me, I’ll be posting a series on the quirky bits of implementing these data structures in detail soon so stay tuned!</em></p>
+
+<hr />
+<h2 id="references">References</h2>
+<ol>
+  <li>Dale, Nell; Walker, Henry M. (1996). Abstract Data Types: Specifications, Implementations, and Applications. Jones &amp; Bartlett Learning. ISBN 978–0–66940000–7.</li>
+  <li>Stephens, R. (2019). Essential algorithms: a practical approach to computer algorithms using Python and C. John Wiley &amp; Sons.</li>
+  <li>GeekforGeeks (2018). Applications of Queue Data Structure. https://www.geeksforgeeks.org/applications-of-queue-data-structure/</li>
+  <li>Wikipedia contributors. (2021, March 31). Binary search tree. In Wikipedia, The Free Encyclopedia. Retrieved 08:24, April 13, 2021, from https://en.wikipedia.org/w/index.php?title=Binary_search_tree&amp;oldid=1015282423</li>
+  <li>Becker, Georg (2008–07–18). “Merkle Signature Schemes, Merkle Trees and Their Cryptanalysis” (PDF). Ruhr-Universität Bochum. p. 16.</li>
+  <li>Nystrom, R. (2018). Crafting Interpreters. https://craftinginterpreters. com/[2. 8. 2020].</li>
+</ol>
+
+  </div><a class="u-url" href="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/20/Elements-of-Programming.html" hidden></a>
+</article>
+    </div>
+  </main><footer class="site-footer h-card">
+  <data class="u-url" href="/https://adeeconometrics.github.io/dcode_blogs/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/https://adeeconometrics.github.io/dcode_blogs/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Dave Amiana</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>Here is a documentation of my journey in Computer Science. 
+</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/https%3A%2F%2Fgithub.com%2Fadeeconometrics" title="https://github.com/adeeconometrics"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://www.linkedin.com/in/https%3A%2F%2Fwww.linkedin.com%2Fin%2Fdave-amiana-8548a91aa%2F" title="https://www.linkedin.com/in/dave-amiana-8548a91aa/"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#linkedin"></use></svg></a></li><li><a rel="me" href="https://twitter.com/https%3A%2F%2Ftwitter.com%2Fiamdeb25" title="https://twitter.com/iamdeb25"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#twitter"></use></svg></a></li><li><a href="https://dev.to/https%3A%2F%2Fdev.to%2Fiamdeb25" title="https://dev.to/iamdeb25"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#devto"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

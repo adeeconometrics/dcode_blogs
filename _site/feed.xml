@@ -1,0 +1,1077 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/https://adeeconometrics.github.io/dcode_blogs/feed.xml" rel="self" type="application/atom+xml" /><link href="/https://adeeconometrics.github.io/dcode_blogs/" rel="alternate" type="text/html" /><updated>2021-08-08T12:35:47+08:00</updated><id>/https://adeeconometrics.github.io/dcode_blogs/feed.xml</id><title type="html">Explorations in Computer Science</title><subtitle>Here is a documentation of my journey in Computer Science. 
+</subtitle><author><name>Dave Amiana</name></author><entry><title type="html">Pointers and References: Design Goals and Use Cases</title><link href="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/08/04/Pointers-and-References-Design-Goals-and-Use-Cases.html" rel="alternate" type="text/html" title="Pointers and References: Design Goals and Use Cases" /><published>2021-08-04T00:00:00+08:00</published><updated>2021-08-04T00:00:00+08:00</updated><id>/https://adeeconometrics.github.io/dcode_blogs/misc/2021/08/04/Pointers-and-References-Design-Goals-and-Use-Cases</id><content type="html" xml:base="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/08/04/Pointers-and-References-Design-Goals-and-Use-Cases.html">&lt;p&gt;At first, it seems that C++ makes things more complicated by introducing yet another layer of abstraction. References seem to encapsulate the same set of functionalities as pointers. Both of these constructs are used to &lt;em&gt;refer&lt;/em&gt; to another entity as they provide access points into manipulating the contents of the &lt;em&gt;referent&lt;/em&gt; entity; they are both allocated on the heap.&lt;/p&gt;
+
+&lt;p&gt;With this, we are faced with the following questions:&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;Are pointers and references the same thing?&lt;/li&gt;
+  &lt;li&gt;Are there any techniques that pointers can only do and vice-versa?&lt;/li&gt;
+  &lt;li&gt;When do we favor pointers over references and vice-versa?&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;By the end of this article, I hope to disentangle these two concepts and aim to give a reason why references deserve their own right for building more robust higher-order concepts.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;pointers&quot;&gt;Pointers&lt;/h2&gt;
+
+&lt;p&gt;Pointers are introduced in C. Pointers store the memory address of an entity of type &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;T&lt;/code&gt; (where &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;T&lt;/code&gt; is a template parameter that can be resolved to &lt;em&gt;any&lt;/em&gt; types), as mentioned, it provides an access point for changing the values of the entity it points to. Consider the following snippet:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;#include &amp;lt;iostream&amp;gt;
+
+int main(){
+    int x  = 10; // sets the content of x to 10.
+    int *y = &amp;amp;x; // sets the pointer to the address of x
+    *y = 5; // changes the content of &amp;amp;x to 5.
+    
+    std::cout &amp;lt;&amp;lt;  x  &amp;lt;&amp;lt;  '\n'; // outputs to content of x that is 5.
+    std::cout &amp;lt;&amp;lt; y &amp;lt;&amp;lt; '\n'; // outputs the memory address of x.
+    std::cout &amp;lt;&amp;lt; &amp;amp;x &amp;lt;&amp;lt; '\n'; // outputs the memory address of x.
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Pointers are great for making use of indirections that manipulate the contents within a certain block of memory. Let us modify the above code  to demonstrate a series of indirection as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;#include &amp;lt;iostream&amp;gt;
+
+int main(){
+    int x = 10;
+    int *y = &amp;amp;x;
+    int *z = y; // takes the address of y i.e. &amp;amp;x.
+    *z = 6;  // changes the content of &amp;amp;x. 
+    
+    std::cout &amp;lt;&amp;lt; x &amp;lt;&amp;lt; '\n';
+    std::cout &amp;lt;&amp;lt; &amp;amp;x &amp;lt;&amp;lt; '\n';
+    std::cout &amp;lt;&amp;lt; y &amp;lt;&amp;lt; '\n';
+    std::cout &amp;lt;&amp;lt; z &amp;lt;&amp;lt; '\n';
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We can extend this by nesting them together:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;#include &amp;lt;iostream&amp;gt;
+
+int main(){
+    int x = 10;
+    int *y = &amp;amp;x;
+    int **z = &amp;amp;y; // declares a double pointer that is pointed to the address of y.
+    **z = 6; // dereferencing of a double pointer to change the content of x.
+    
+    std::cout &amp;lt;&amp;lt; x &amp;lt;&amp;lt; '\n';
+    std::cout &amp;lt;&amp;lt; &amp;amp;x &amp;lt;&amp;lt; '\n'; // outputs the address of x.
+    std::cout &amp;lt;&amp;lt; &amp;amp;y &amp;lt;&amp;lt; '\n'; // outputs the address of y.
+    std::cout &amp;lt;&amp;lt; z &amp;lt;&amp;lt; '\n'; // outputs the address of y.
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;As we notice, the address of pointers is not the same as the address of its reference. This observation is because pointers have their own identity. Consequently, pointers can be reassigned to another variable more so they can tolerate null values: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NULL&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nullptr&lt;/code&gt; (prefer using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nullptr&lt;/code&gt; if you are &lt;a href=&quot;https://www.ibm.com/docs/en/i/7.3?topic=pointers-null&quot;&gt;using pointers&lt;/a&gt;). That is, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;int *x = nullptr&lt;/code&gt; is valid and will compile.&lt;/p&gt;
+
+&lt;p&gt;More so, pointers can iterate over arrays with pre- and post-increment operators, pre- and post-decrement operators, and subscript operators.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;#include &amp;lt;iostream&amp;gt;
+
+void iterate(int* a_ptr, size_t a_size){
+    for(size_t i = 0; i &amp;lt; a_size; ++i){
+        std::cout &amp;lt;&amp;lt; a_ptr[i] &amp;lt;&amp;lt; &quot; &quot;;
+    }
+    
+    std::cout &amp;lt;&amp;lt; '\n' &amp;lt;&amp;lt; *(++a_ptr); // 2
+    std::cout &amp;lt;&amp;lt; '\n' &amp;lt;&amp;lt; *(--a_ptr); // 1 
+    std::cout &amp;lt;&amp;lt; '\n' &amp;lt;&amp;lt; *(a_ptr++); // 1
+    std::cout &amp;lt;&amp;lt; '\n' &amp;lt;&amp;lt; *(a_ptr--); // 2
+}
+
+int main(){
+    int array[5]{1,2,3,4,5};
+    int *ptr_arr = array;
+    iterate(ptr_arr, 5);
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As mentioned, pointers can be used for allocating values on the heap as well as writing in that location. Let’s consider allocating memory for an array block with size &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;3&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;#include &amp;lt;iostream&amp;gt;
+
+void output(int* a_ptr, size_t a_size){
+    std::cout &amp;lt;&amp;lt; '\n';
+    for(size_t i = 0; i &amp;lt; a_size; ++i)
+        std::cout &amp;lt;&amp;lt; a_ptr[i] &amp;lt;&amp;lt; &quot; &quot;;
+}
+
+int main(){
+    int *array = new int[3];
+    // printing uninitialized array
+    output(array, 3);
+    // writing values on array block
+    for(size_t i = 0; i &amp;lt; 3; ++i)
+        array[i] = i+1;
+    
+    output(array, 3);
+    
+    // deallocates the memory
+    delete [] array; 
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&quot;reminders-for-using-pointers&quot;&gt;Reminders for using Pointers&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;Pointers can be difficult to manage as they can be nested and combined without restrictions, this can result in a complicated piece of code that is hard to maintain.&lt;/li&gt;
+  &lt;li&gt;Pointers may leak resources if not properly managed:
+    &lt;ul&gt;
+      &lt;li&gt;ensure clean-ups when pointer types are no longer needed&lt;/li&gt;
+      &lt;li&gt;remember to deallocate resources allocated on the heap when they are no longer relevant to your code.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Prefer using smart pointers: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;std::unique_ptr&amp;lt;T&amp;gt; u_ptr&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;std::shared_ptr&amp;lt;T&amp;gt; s_ptr&lt;/code&gt;, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;std::weak_ptr&amp;lt;T&amp;gt; w_ptr&lt;/code&gt; over raw pointers when performance is secondary to safety or finer grain of control are unnecessary. Smart pointers allow you to automate clean-up through &lt;a href=&quot;https://bityl.co/8BOl&quot;&gt;RAII&lt;/a&gt; with a minimal performance cost, in the case of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;u_ptr&lt;/code&gt; there is zero performance overhead.&lt;/li&gt;
+  &lt;li&gt;For pointer objects &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ptr_obj&lt;/code&gt; or user-defined types, members can be accessed through arrow operator e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ptr_obj-&amp;gt; function()&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;references&quot;&gt;References&lt;/h2&gt;
+
+&lt;p&gt;References make things more convenient to express, it provides the necessary set of constraints for expressing &lt;em&gt;ownership semantics&lt;/em&gt; – a topic that is beyond our concern, for now. C++ follows the design principle that solutions that adhere to the standards should be easier than the alternatives.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Now that we know about pointers, how do we contrast this with references?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;References can be thought of as a  &lt;a href=&quot;https://bityl.co/8BUS&quot;&gt;constant pointer&lt;/a&gt;  &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;T const* c_ptr = &amp;amp;obj&lt;/code&gt; and should not be confused with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;const T* ref = &amp;amp;obj&lt;/code&gt;: The former allows the contents of the object to be modified but restricts the address to refer to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;obj&lt;/code&gt;, the latter reverses the effect and only restricts the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;obj&lt;/code&gt; to be modified.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;    int x = 5, y = 6;
+    int *const ptr = &amp;amp;x;
+    ptr = &amp;amp;y; // error
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;To modify the content of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x&lt;/code&gt; and set it to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;y&lt;/code&gt; we say:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;    int x = 5, y = 6;
+    int *const ptr = &amp;amp;x;
+    *ptr = y;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The same effect is achieved with references. As a result, references bind to the location of the entity in memory. It allows the contents of an entity to be modified, but it &lt;em&gt;cannot&lt;/em&gt; be reassigned and must be bound at initialization. Therefore, the reference of an entity assumes the entity of the original variable.&lt;/p&gt;
+
+&lt;p&gt;As mentioned, references can also allocate memory for a single entity on the heap.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;    int &amp;amp;ref = *(new int(0));
+    std::cout &amp;lt;&amp;lt; ref &amp;lt;&amp;lt;'\n';
+    ref = 3;
+    std::cout &amp;lt;&amp;lt; ref;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&quot;reminders-for-using-references&quot;&gt;Reminders for using References&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;References cannot be assigned to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nullptr&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;References cannot iterate over arrays.&lt;/li&gt;
+  &lt;li&gt;Returning references over local variables may cause undefined behavior (dangling references).&lt;/li&gt;
+  &lt;li&gt;References must be bound to an existing entity.&lt;/li&gt;
+  &lt;li&gt;References only allow for one level of indirection.&lt;/li&gt;
+  &lt;li&gt;References express the intention clearly and concisely.&lt;/li&gt;
+  &lt;li&gt;Since C++11 standards, references have been used more often as the elements for move semantics are  &lt;a href=&quot;https://en.cppreference.com/w/cpp/language/move_constructor&quot;&gt;built from the notion of references&lt;/a&gt;  (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lvalue&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rvalue&lt;/code&gt; references).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;summary&quot;&gt;Summary&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Are pointers and references the same thing?&lt;/strong&gt; No.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Are there any techniques that pointers can only do and vice-versa?&lt;/strong&gt; Pointers are more flexible than references which can make your code complicated if not managed well. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;T const* ref&lt;/code&gt; achieves the same behavior of references, except for array referencing which gives us more reason for choosing references over pointers (when appropriate) as its semantics restrict iterating over array-like structures:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;    int const *r = &amp;amp;*(new int[3]{1,3,4});
+    std::cout &amp;lt;&amp;lt; r[2] &amp;lt;&amp;lt;'\n';
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Whereas array indexing with references will result to compiler error:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;    int &amp;amp;r = *(new int[3]{1,3,4};
+    std::cout &amp;lt;&amp;lt; r[2] &amp;lt;&amp;lt;'\n';
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;When do we favor pointers over references and vice-versa?&lt;/strong&gt; Pointer types are generally useful for setting up a separate field of indirection capable of modifying the contents of multiple variables of the same type. Having the same pointer accessing multiple variables may be difficult to trace and reason with. It is preferred to maintain clarity over the convenience of typing one pointer to all variables of the same type. For this reason, making use of references is safer.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Pointers are not really terrible, in fact, they are one of the greatest features we unlock in languages like C/C++, however, their power comes with a cost.&lt;/p&gt;
+
+&lt;p&gt;In conclusion, references are not just syntax sugar to cast &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;T const*&lt;/code&gt;, it has its own design goals and purpose namely containing the address of declared entities. This improves the clarity of our intent, and in these situations, the C++ compiler is our friend.&lt;/p&gt;</content><author><name>Dave Amiana</name></author><category term="misc" /><summary type="html">At first, it seems that C++ makes things more complicated by introducing yet another layer of abstraction. References seem to encapsulate the same set of functionalities as pointers. Both of these constructs are used to refer to another entity as they provide access points into manipulating the contents of the referent entity; they are both allocated on the heap.</summary></entry><entry><title type="html">Designing functions: The building blocks of Computer Programs</title><link href="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/06/15/Designing-Functions.html" rel="alternate" type="text/html" title="Designing functions: The building blocks of Computer Programs" /><published>2021-06-15T00:00:00+08:00</published><updated>2021-06-15T00:00:00+08:00</updated><id>/https://adeeconometrics.github.io/dcode_blogs/misc/2021/06/15/Designing-Functions</id><content type="html" xml:base="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/06/15/Designing-Functions.html">&lt;blockquote&gt;
+  &lt;p&gt;back to basics&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;A function is an essential construct in programming. In the language that we use to convey a message on the computer, functions closely resemble a verb: &lt;em&gt;“the nuts and bolts of the language”&lt;/em&gt; (S. Pinker, 2007). Put it in another way, functions serve as the primary constructs for expressing a set computational procedure in a programming language.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;It is better to break down the problem into manageable pieces. Solving the smaller part of the problem requires a computational procedure that we store in a function.&lt;/p&gt;
+
+&lt;p&gt;This article will introduce the things to consider in designing and organizing functions.&lt;/p&gt;
+
+&lt;p&gt;A function is a block of code that processes inputs and configures an output. One of the nice things about this is it breaks down our solution into a set of subroutines that we can reuse to solve other problems.&lt;/p&gt;
+
+&lt;p&gt;Indeed, simple algorithms can be stored in one function, sometimes, it branches off into two or more: &lt;strong&gt;the question is when and why do we need indirection?&lt;/strong&gt; The most obvious reason for this is &lt;em&gt;code-reusability&lt;/em&gt;. We need to make conscious efforts into making our codebase sustainable i.e. reusable. To achieve this, we have to delegate the simplest version of a task in a function. Our goal is to minimize the &lt;em&gt;boilerplate code&lt;/em&gt; (sections of code that are repeated in multiple places with little to no variation), &lt;strong&gt;we follow the virtue of not repeating ourselves&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Functions are sufficient for developing sophisticated software systems. This technique is sometimes known as &lt;em&gt;modular programming&lt;/em&gt;. This is one of the reasons why C is deemed elegant by some developers I know.&lt;/p&gt;
+
+&lt;p&gt;There are three major concepts in modular programming:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;Module&lt;/em&gt; - a self-contained collection of functions that solves a problem (or subproblem).&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;Abstract Step&lt;/em&gt; - A step in which some implementation details are unspecified. This step may define the routes where concrete functions may take place. In other words, it is a code block that delegates a group of functions necessary for solving the problem.&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;Concrete Step&lt;/em&gt; - A realization of the abstract step that implements the logic for solving independent subproblems.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;software-design-process-top-down-approach&quot;&gt;Software Design Process: Top-Down Approach&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.hashnode.com/res/hashnode/image/upload/v1623724225735/nkFCw94Pc.png&quot; alt=&quot;image.png&quot; /&gt;
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Figure 1.0&lt;/code&gt;. Hierarchical solution tree (Dale, N. B., &amp;amp; Weems, C., 2014).&lt;/p&gt;
+
+&lt;p&gt;Steps for applying design principles in functions:&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;Understand the problem&lt;/strong&gt;. State its input requirements as well as the specifications for expected output.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Write the major steps for solving the problem&lt;/strong&gt;. Make a hierarchical solution tree (as seen in figure 1) and define the major problems you need to solve. As you go down to the bottom, problems become more concrete and simpler.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Decide if the problem can be broken down into independent subproblems that we can work on separately&lt;/strong&gt;. It is often simple enough when you can see how to implement it directly in a language. If you feel overwhelmed by writing it in a language, you are probably bypassing one or more levels of abstraction – you need to step back and think through how you can simplify this by breaking down the problem.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Ensure that each function has exactly one job&lt;/strong&gt;. Their purpose should be obvious in its name (it makes your code easier to read and self-documenting, so we must assure that the function name should clearly state its purpose).&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Document solution process&lt;/strong&gt;. Documentation helps to make our codebase easier to maintain.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;references&quot;&gt;References:&lt;/h2&gt;
+&lt;ol&gt;
+  &lt;li&gt;Pinker, S. (2007). Steven Pinker: What our language habits reveal.  &lt;a href=&quot;https://www.youtube.com/watch?v=LjQM8PzCEY0&quot;&gt;TED&lt;/a&gt;.&lt;/li&gt;
+  &lt;li&gt;Dale, N. B., &amp;amp; Weems, C. (2014). Programming and problem solving with C++. Jones &amp;amp; Bartlett Publishers.&lt;/li&gt;
+  &lt;li&gt;DeNero, J. (n.d.).  &lt;a href=&quot;https://composingprograms.com/pages/14-designing-functions.html&quot;&gt;Composing Programs&lt;/a&gt;.&lt;/li&gt;
+&lt;/ol&gt;</content><author><name>Dave Amiana</name></author><category term="misc" /><summary type="html">back to basics</summary></entry><entry><title type="html">Elements of Programming: Fundamental Data Structures</title><link href="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/20/Elements-of-Programming.html" rel="alternate" type="text/html" title="Elements of Programming: Fundamental Data Structures" /><published>2021-05-20T00:00:00+08:00</published><updated>2021-05-20T00:00:00+08:00</updated><id>/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/20/Elements-of-Programming</id><content type="html" xml:base="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/20/Elements-of-Programming.html">&lt;p&gt;There are two general ways of looking at data structures: concept and implementation. Ideally, they should serve you the sense in selecting an effective data structure for a given problem. Fundamental data structures manifest themselves naturally in most situations. The problem usually demands a certain data structure, while others could be represented in different ways. An effective data structure should simplify the problem. But that is only half of the story since a data structure must also ensure computational efficiency. We can simplify the problem by conceptually looking for an apt data structure while performance benefits are obtained by looking into the implementation.&lt;/p&gt;
+
+&lt;p&gt;Now that we are familiar with the essence of looking at the two broad lenses in selecting a data structure, I should formally introduce you to the characters. We can view data structures from abstraction — that we shall call from hereon then as Abstract Data Type — and implementation.&lt;/p&gt;
+
+&lt;p&gt;An Abstract Data Types (ADT) ought to describe a set of functionalities in a given data structure — they are written in a declarative manner. It is close to an algebraic structure in mathematics that outlines the rules and operations in a particular context [1]. The inspirations from mathematics are established within a class that contains a collection of values, and behaviors that support the operations that we can do within a structure. Such an abstract model hides the implementation logic. ADT is language-agnostic as it only describes the prototype of a data structure.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-None&quot;&gt;List:
+  - add -&amp;gt; adds an element on the list
+  - remove -&amp;gt; removes an element on the list
+  - sort -&amp;gt; sort the list in order 
+  - search -&amp;gt; search a value on the list. If value is found, return true. 
+  - display -&amp;gt; display list traversal
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;hr /&gt;
+&lt;p&gt;In programming a data structure with an abstract model (ADT), a good practice is to establish &lt;a href=&quot;https://en.wikipedia.org/wiki/Loose_coupling&quot;&gt;loose coupling&lt;/a&gt; between modules that contain the ADT and the implementation specifics. The purpose is to maintain a conceptual map between programming logic and functionalities which improves the maintainability of our system.&lt;/p&gt;
+
+&lt;p&gt;Below is an example of implementing an ADT inside a language which in this case is C++ because the Standard Template Library (STL) is deemed mature and state of the art, it is a good reference for reading a good piece of software. However, due to its nuances and technical sophistication, we will only base our discussion on one of the core concepts of STL: containers.&lt;/p&gt;
+
+&lt;p&gt;Keeping this in a separate module improves maintainability and clarifies the intention of the developer before they implement the logic specific to that functionality. Do not worry about the new word singly-linked list because we would not talk about that here. For now, focus on how we wrote our ADT for describing the operations of the data structure — which in this case is a List.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;# pragma once
+
+// ADT of singly-linked list
+class List{
+  private:
+    struct Node{
+      int data;
+      Node *next;
+    };
+
+    Node *head;
+  
+  public:
+    explicit List();
+    ~List();
+    void add(Node _node);
+    void remove(Node _node);
+    void sort();
+    void display();
+    void clear();
+  
+    bool is_empty();
+    bool is_element(Node _node);
+
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;hr /&gt;
+&lt;p&gt;Meanwhile, the implementation specifics contain the quirks and tricks that ensure the operations ascribed in the ADT. From this perspective, it is important to know the quirks of your language to know the techniques that ensure safety and efficiency, such as referencing and memory management in languages like C/C++. For this matter, implementing the concepts defined in ADT closely works with the language; the programmer must be technically adept in the language.&lt;/p&gt;
+
+&lt;p&gt;In practice, these two lenses work together by establishing clarity first, then specifications.&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;h1 id=&quot;fundamental-data-structures&quot;&gt;Fundamental Data Structures&lt;/h1&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.hashnode.com/res/hashnode/image/upload/v1618748350087/pFDpTZUal.png&quot; alt=&quot;image.png&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Much like the abstract and practical resemblance of Euclidean geometry to the world, ADT and its Implementation correspond in a manner where the former is purely ideal while the latter is closer with actuality.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;For this section, we briefly introduce the fundamental data structures and cite some of their use cases. We shall be introduced to the following data structures.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;List&lt;/li&gt;
+  &lt;li&gt;Deque&lt;/li&gt;
+  &lt;li&gt;Tree&lt;/li&gt;
+  &lt;li&gt;Set&lt;/li&gt;
+  &lt;li&gt;Map&lt;/li&gt;
+  &lt;li&gt;Graph&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Before we delve in a little further, we should keep in mind the Base functionalities of our data structures. The baseline for each structure has to support the following operations: it should be able to search an item, sort, insert, update, and delete items.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Search − Algorithm to find an item in a data structure.&lt;/li&gt;
+  &lt;li&gt;Sort − Algorithm to organize items in a certain order.&lt;/li&gt;
+  &lt;li&gt;Insert − Algorithm to insert items in a data structure.&lt;/li&gt;
+  &lt;li&gt;Update − Algorithm to update an existing item in a data structure.&lt;/li&gt;
+  &lt;li&gt;Delete − Algorithm to remove an existing item from a data structure.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;template&amp;lt;typename T&amp;gt;
+class Base{
+	public:
+		Base();
+		virtual ~Base();
+		virtual void search(const T&amp;amp; _element) = 0;
+		virtual void sort() = 0;
+		virtual void insert(const T&amp;amp; _element) = 0;
+		virtual void update() = 0;
+		virtual void delete(const T&amp;amp; _element) = 0;
+};
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr /&gt;
+&lt;h2 id=&quot;list&quot;&gt;List&lt;/h2&gt;
+&lt;p&gt;The list is an abstract data type that represents a countable number of ordered values, where the same value may occur more than once. Lists can be ordered linearly or non-linearly. Non-linear lists can be implemented in a form of a Tree, Graph, or a Map. However, we distinguished them in their respective categories for they, themselves, have their own nuances. List, in this context, pertains to a linear list family.&lt;/p&gt;
+
+&lt;p&gt;A list data structure is useful when the notion of order is obtained, a value is allowed to have duplicates, and whenever we would like to do sorting and searching with our data set. The List ADT is implemented in the class of &lt;a href=&quot;https://www.cplusplus.com/reference/stl/&quot;&gt;Sequence containers&lt;/a&gt; in C++ STL. It comprises the following: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;array&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vector&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;deque&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;forwad_list&lt;/code&gt;, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;list&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Conceptually, all other data structures can be implemented with lists [2], however, we want to categorize them for the sorts of structures they represent, which is useful for problems we encounter.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;This is related to how algorithms are categorized which I laid out here:&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;%[https://dcode.hashnode.dev/making-sense-of-algorithms-general-perspective]&lt;/p&gt;
+
+&lt;p&gt;A common structure when we talk about a list is called linked-list (implemented in STL as a list). It is applied in many use-cases such as deriving other structures, the links you visit in a web browser, or music playlists.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.hashnode.com/res/hashnode/image/upload/v1618748833225/AiGuik0ex.png&quot; alt=&quot;image.png&quot; /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;deque&quot;&gt;Deque&lt;/h2&gt;
+
+&lt;p&gt;Deque is a combination of queue and stack since the difference between these data structures is their ordering whereas the queue maintains a FIFO order, the stack keeps a LIFO order. Thus, deque support FIFO and LIFO ordering of a list.&lt;/p&gt;
+
+&lt;p&gt;FIFO means first-in, first-out ordering. The most common example would be to think of waiting in line in supermarkets. Sometimes we call this a queue where the policy established is first-come, first-served.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.hashnode.com/res/hashnode/image/upload/v1618748875863/2u47zCGFS.png&quot; alt=&quot;image.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;LIFO, on the other hand, stands for last-in, first-out ordering. Think of removing a book from a pile of books. You would have to remove the top book, iteratively until you found the book you want to read.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.hashnode.com/res/hashnode/image/upload/v1618748897961/bhtYXEoIf.png&quot; alt=&quot;image.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Queues are used for maintaining a LIFO order of precedence in processing requests. A great example would be scheduling systems: the processing is done on a first-come, first-serve basis. CPU scheduling systems exploit the LIFO property of the queue [3].&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.hashnode.com/res/hashnode/image/upload/v1618748918810/UPWHykQC-.png&quot; alt=&quot;image.png&quot; /&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;A sample &lt;a href=&quot;https://en.wikipedia.org/wiki/Thread_pool&quot;&gt;thread pool&lt;/a&gt; (green boxes) with a queue (FIFO) of waiting for tasks (blue) and a queue of completed tasks (yellow).&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The common use-cases of the stack resonate within the language such as the call stack wherein stack data structure that stores information about the active subroutines of a computer program.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.hashnode.com/res/hashnode/image/upload/v1618748968929/2haShHIfx.png&quot; alt=&quot;image.png&quot; /&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;# pragma once 
+
+template &amp;lt;typename T&amp;gt;
+class Deque: public Base&amp;lt;T&amp;gt;{
+  private:
+    int size;
+    T* front_reference;
+    T* back_reference;
+  
+  public:
+  Deque();
+  ~Deque();
+  // basic functionalities
+  void search(const T&amp;amp; _element) override;
+  void sort() override;
+  void insert(const T&amp;amp; _element) override;
+  void update() override;
+  void delete(const T&amp;amp; _element) override;
+  // specialized function in Deque container
+  void push_back(const T&amp;amp; _element);
+  void push_front(const T&amp;amp; _element);
+  void pop_back(const T&amp;amp; _element);
+  void pop_front(const T&amp;amp; _element);
+  void front();
+  void back();
+};
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr /&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;Moving on to more specialized data structures since they rely on the previous data structures. This is where it gets so exciting!&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;trees&quot;&gt;Trees&lt;/h2&gt;
+&lt;p&gt;A tree data structure is used to represent hierarchy or non-linear ordering. We commonly name them with what resembles a family tree. We will go over some common terminologies but keep in mind that it is not exhaustive.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;root — a root node is a starting point of a tree structure. It does not have a parent node.&lt;/li&gt;
+  &lt;li&gt;parent — a parent node is an immediate predecessor of a node.&lt;/li&gt;
+  &lt;li&gt;child — a child is a successor of a parent node&lt;/li&gt;
+  &lt;li&gt;leaf — a leaf is located at the end of the tree. It does not have any children.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.hashnode.com/res/hashnode/image/upload/v1618749099683/K2gKBo-8H.png&quot; alt=&quot;image.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;There are many versions of trees, and they can be implemented in various ways. It is important to note that although C++ STL does not have a tree container, it does implement sets as a &lt;a href=&quot;https://bityl.co/6Mhm&quot;&gt;Binary Search Tree&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;A binary search tree (BST) is a particular type of tree that maintains a property of allowing only two children per parent node where the left child is always less than the parent while the right child is always greater than the parent [4].&lt;/p&gt;
+
+&lt;p&gt;Another kind of tree that is widely used in cryptography is known as the Merkle Tree in which every &lt;a href=&quot;https://en.wikipedia.org/wiki/Leaf_node&quot;&gt;leaf node&lt;/a&gt; is labeled with the &lt;a href=&quot;https://en.wikipedia.org/wiki/Leaf_node&quot;&gt;cryptographic hash&lt;/a&gt; of a data block, and every non-leaf node is labeled with the cryptographic hash of the labels of its child nodes [5].&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.hashnode.com/res/hashnode/image/upload/v1618749178746/ha8It3rEE.png&quot; alt=&quot;image.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Compilers and interpreters [6] exploit the hierarchical structure and order of a tree. Parse trees are formal representations of a language that can be understood by computers.&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;set&quot;&gt;Set&lt;/h2&gt;
+
+&lt;p&gt;As we mentioned earlier, sets are implemented as trees. Sets are very useful for keeping unique elements in a given list, not to mention that they serve to be the foundation of mathematics — we know this from &lt;a href=&quot;https://bityl.co/6Qni&quot;&gt;set theory&lt;/a&gt;. It follows that advanced mathematical concepts are realized within the structure of the set.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;# pragma once
+
+template &amp;lt;typename T&amp;gt;
+class Set{
+  public:
+    Set();
+    ~Set();
+    
+    void display();
+    void insert(const T&amp;amp; _element);
+    void remove(const T&amp;amp; _element);
+  
+    int size();
+  
+    bool is_element(const T&amp;amp; _element);
+    bool is_empty();
+    bool is_disjoint();
+    bool is_subset(const Set&amp;amp; set);
+  
+    Set union(const Set&amp;amp; set);
+    Set intersection(const Set&amp;amp; set);
+    Set complement(const Set&amp;amp; set);
+    Set difference(const Set&amp;amp; set);
+    Set symmetric_difference(const Set&amp;amp; set);
+};
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr /&gt;
+&lt;h2 id=&quot;map&quot;&gt;Map&lt;/h2&gt;
+
+&lt;p&gt;A map is a key-value pair data structure, other languages like Python call them dictionaries. A key is an index that you use to call its corresponding value.&lt;/p&gt;
+
+&lt;p&gt;The computer scientist, Brian Kernighan, deemed them as the most useful kind of data structure.
+%[https://youtu.be/qTZJLJ3Gm6Q]&lt;/p&gt;
+
+&lt;p&gt;The most notable application of maps is in &lt;a href=&quot;https://www.cise.ufl.edu/~mschneid/Research/papers/HS05BoCh.pdf&quot;&gt;database systems&lt;/a&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-C++&quot;&gt;# pragma once
+# include &amp;lt;string&amp;gt;
+
+template&amp;lt;typename T&amp;gt;
+class Map{
+  public:
+    Map();
+    ~Map();
+  
+    void add(const std::string &amp;amp;key, const T&amp;amp; value);
+    void remove(const std::string &amp;amp;key, const T&amp;amp; value);
+    void get_value(const std::string &amp;amp;key);
+    void get_key(const T&amp;amp; value);
+    void display();
+};
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr /&gt;
+&lt;h2 id=&quot;graph&quot;&gt;Graph&lt;/h2&gt;
+&lt;p&gt;Finally, the broadest category of data structure is here!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.hashnode.com/res/hashnode/image/upload/v1618749384541/ZDis7E-3P.png&quot; alt=&quot;image.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;A graph is a generalization of Trees. An area of mathematics and computer science is devoted to exploring the universe of graphs. Among my personal favorites is the realization of graph theory in automated theorem proving and some theoretical foundations in Physics, as found in Stephen Wolfram’s project.&lt;/p&gt;
+
+&lt;p&gt;Graphs are everywhere, and we can represent nearly all problems with a graph since a tree is a special case of a graph and a linked list is a special case of a tree.&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;h1 id=&quot;takeaways&quot;&gt;Takeaways&lt;/h1&gt;
+&lt;p&gt;Now that we covered the fundamental data structures and their use cases, we learned that we can represent problems in various forms of data structure. We also covered the areas of applications where such data structures are found most crucial. And we laid out the abstract model for implementing these data structures. A fun way to explore this area of computer science is to try and implement them on your own.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;If you want to engage on this topic with me, I’ll be posting a series on the quirky bits of implementing these data structures in detail soon so stay tuned!&lt;/em&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;references&quot;&gt;References&lt;/h2&gt;
+&lt;ol&gt;
+  &lt;li&gt;Dale, Nell; Walker, Henry M. (1996). Abstract Data Types: Specifications, Implementations, and Applications. Jones &amp;amp; Bartlett Learning. ISBN 978–0–66940000–7.&lt;/li&gt;
+  &lt;li&gt;Stephens, R. (2019). Essential algorithms: a practical approach to computer algorithms using Python and C. John Wiley &amp;amp; Sons.&lt;/li&gt;
+  &lt;li&gt;GeekforGeeks (2018). Applications of Queue Data Structure. https://www.geeksforgeeks.org/applications-of-queue-data-structure/&lt;/li&gt;
+  &lt;li&gt;Wikipedia contributors. (2021, March 31). Binary search tree. In Wikipedia, The Free Encyclopedia. Retrieved 08:24, April 13, 2021, from https://en.wikipedia.org/w/index.php?title=Binary_search_tree&amp;amp;oldid=1015282423&lt;/li&gt;
+  &lt;li&gt;Becker, Georg (2008–07–18). “Merkle Signature Schemes, Merkle Trees and Their Cryptanalysis” (PDF). Ruhr-Universität Bochum. p. 16.&lt;/li&gt;
+  &lt;li&gt;Nystrom, R. (2018). Crafting Interpreters. https://craftinginterpreters. com/[2. 8. 2020].&lt;/li&gt;
+&lt;/ol&gt;</content><author><name>Dave Amiana</name></author><category term="misc" /><summary type="html">There are two general ways of looking at data structures: concept and implementation. Ideally, they should serve you the sense in selecting an effective data structure for a given problem. Fundamental data structures manifest themselves naturally in most situations. The problem usually demands a certain data structure, while others could be represented in different ways. An effective data structure should simplify the problem. But that is only half of the story since a data structure must also ensure computational efficiency. We can simplify the problem by conceptually looking for an apt data structure while performance benefits are obtained by looking into the implementation.</summary></entry><entry><title type="html">The R Language: An Overview</title><link href="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/13/The-R-Language-An-Overview.html" rel="alternate" type="text/html" title="The R Language: An Overview" /><published>2021-05-13T00:00:00+08:00</published><updated>2021-05-13T00:00:00+08:00</updated><id>/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/13/The-R-Language-An-Overview</id><content type="html" xml:base="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/13/The-R-Language-An-Overview.html">&lt;p&gt;R is a functional programming language that took inspiration from Scheme [1]. It was made by statisticians Ross Ihaka, and Robert Gentlemen [2] as they began to seek an alternative implementation of the &lt;a href=&quot;https://bityl.co/6lIe&quot;&gt;S language&lt;/a&gt;. The name of &lt;strong&gt;R&lt;/strong&gt; came from the names of its core developer, Robert, and Ross.&lt;/p&gt;
+
+&lt;p&gt;Functional programming requires another way of thinking about functions. First-class functions are distinct features in R which means that you can do anything with functions as you can do with &lt;strong&gt;RObjects&lt;/strong&gt; – main data structures of R. As a result, you are allowed to assign functions to variables, store them in &lt;em&gt;lists&lt;/em&gt;, pass them as arguments, and return them as a result of a function [3]. However, R is not a purely functional language in the sense that it does not require you to write pure functions [3-4]. However, functional programming can still be adapted; this lends to good practice for the problem domain of data analysis [3].&lt;/p&gt;
+
+&lt;p&gt;R, like Python, is a dynamically typed programming language which means that data types need not be specified as in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;int x&lt;/code&gt; in C.&lt;/p&gt;
+
+&lt;p&gt;R is an example of a domain-specific language, it is intended to do advanced statistical analyses and modeling, which makes its name in Data Science and Machine Learning.&lt;/p&gt;
+
+&lt;p&gt;This article will cover the core features of R that are sufficient for you to get started. I am new to this language, so let’s welcome each other! I will end this with links to my resources in learning this language, hopefully bringing your learning a step further.&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;overview-of-the-language&quot;&gt;Overview of the language&lt;/h2&gt;
+&lt;p&gt;R is mainly used by scientists, statisticians, and analysts for exploring subtle features of their data. &lt;em&gt;It is an integrated suite of software that supports data manipulation, calculation, and graphical display such as plotting functionalities&lt;/em&gt; [5].&lt;/p&gt;
+
+&lt;p&gt;From the R Core developers, R supports the following features:&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;Effective data handling and storage facility.&lt;/li&gt;
+  &lt;li&gt;Supports a suite of operators for calculations on arrays, in particular matrices.&lt;/li&gt;
+  &lt;li&gt;R has a large, coherent, integrated collection of intermediate tools for data analysis.&lt;/li&gt;
+  &lt;li&gt;R features graphical facilities for data analysis and display either directly at the computer or on hard copy.&lt;/li&gt;
+  &lt;li&gt;R has a well-developed, simple, and effective programming language (called ‘S’) which includes conditionals, loops, user-defined recursive functions, and input and output facilities. (Indeed most of the system-supplied functions are themselves written in the S language.)&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;data-types-in-r&quot;&gt;Data Types in R&lt;/h2&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Type&lt;/th&gt;
+      &lt;th&gt;Example&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Logical&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;TRUE&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FALSE&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Numeric&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;95.678&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Integer&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Complex&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;9+3i&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Character&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'a'&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;operators-in-r&quot;&gt;Operators in R&lt;/h2&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Operators&lt;/th&gt;
+      &lt;th&gt;Name&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;lt;-&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-&amp;gt;&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;=&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;lt;&amp;lt;-&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-&amp;gt;&amp;gt;&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;Assignment operator&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;lt;&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;less than i.e. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x &amp;lt; y&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;gt;&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;greater than i.e. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x &amp;gt; y&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;==&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;equal to i.e. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x == y&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;lt;=&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;less than or equal to i.e. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x &amp;lt;= y&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;!=&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;not equal to i.e. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x !=  y&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;!&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;not i.e. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;!x&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;amp;&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;and i.e. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x &amp;amp; y&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;I&lt;/td&gt;
+      &lt;td&gt;or i.e. x I y&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;valid-variable-names&quot;&gt;Valid Variable names&lt;/h2&gt;
+
+&lt;p&gt;Variables are constructs that represent the contents of memory. We can access the values of these memory blocks by naming them and referring to them in our expressions e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a &amp;lt;- 1&lt;/code&gt; and we assign the value of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a&lt;/code&gt; to a new variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;b&lt;/code&gt;: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;b&amp;lt;-a&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Here are a couple of rules to name your variables:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Your variable should &lt;strong&gt;not&lt;/strong&gt; begin with a number e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;200var&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Your variable should only contain letters, numbers, dot, and underscore e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var_2&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Your variable should &lt;strong&gt;not&lt;/strong&gt; start with underscore e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_var&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;If your variable starts with a dot (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.&lt;/code&gt;), it should &lt;strong&gt;not&lt;/strong&gt; be followed by a number e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.2var&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;As we demonstrated earlier, we bind a value to our named entity by using our assignment operator. By convention &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;lt;-&lt;/code&gt; is usually used in practice.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;bnf-of-r-expression&quot;&gt;BNF of R Expression&lt;/h2&gt;
+&lt;p&gt;An expression generates a value, that is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a&amp;amp;b&lt;/code&gt; is an expression. Backus-Naur Form (BNF) of grammar succinctly describes all the valid instances of an R expression.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-None&quot;&gt;&amp;lt;expr&amp;gt;:= &amp;lt;var&amp;gt; &amp;lt;op&amp;gt; &amp;lt;var&amp;gt; | &amp;lt;op&amp;gt; &amp;lt;var&amp;gt;
+&amp;lt;op&amp;gt;:= assingment_operator | &amp;lt; | &amp;gt; | &amp;lt;= | =&amp;gt; | != | ! | | | &amp;amp; 
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Here &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a|b&lt;/code&gt; indicates that either the form of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;b&lt;/code&gt; is valid. For example,&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;!a&lt;/code&gt; is a valid instance of this grammar as well as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a!=b&lt;/code&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;fundamental-data-structures-in-r&quot;&gt;Fundamental Data Structures in R&lt;/h2&gt;
+
+&lt;p&gt;If you have ever been in a data structures course or had used data structures in other languages, R’s core data structure might seem a little bit odd. At least this was the case for me when I studied this language two weeks ago. This led me to discover the intentions of writing this language: R is a language designed for scientists, statisticians, and data analysts. Now it makes so much sense why we have the following data structures in R: statistical methods operate in &lt;a href=&quot;https://bityl.co/6orn&quot;&gt;vector space&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Since R is intended to be used in the domain of statistical analyses, the main underlying structure or R is a vector. That said, R is highly optimized to work with vectors. So let’s begin with this structure.&lt;/p&gt;
+
+&lt;h3 id=&quot;vector&quot;&gt;Vector&lt;/h3&gt;
+&lt;p&gt;A vector is a fundamental data type in R. It &lt;strong&gt;cannot&lt;/strong&gt; contain a mixture of data types i.e &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;c(1, &quot;hello world&quot;)&lt;/code&gt;. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;c()&lt;/code&gt; is a built-in function that converts an item into a vector.&lt;/p&gt;
+
+&lt;h3 id=&quot;lists&quot;&gt;Lists&lt;/h3&gt;
+&lt;p&gt;We can think of lists are generic vectors that can contain other objects not only limited to one data type e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a = list(&quot;a&quot;, 3, c(2,3,5))&lt;/code&gt;. As we can notice, we can even make a list of functions in R. Even further, we can make lists of lists in R.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;list()&lt;/code&gt; is a list constructor for making a list.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a[&amp;lt;index&amp;gt;]&lt;/code&gt; is an example of how we can index a value in a list.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Notice how Lists are constructed from a vector by the function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;c()&lt;/code&gt;. This is also the same with other fundamental structures in R.&lt;/p&gt;
+
+&lt;h3 id=&quot;matrices&quot;&gt;Matrices&lt;/h3&gt;
+
+&lt;p&gt;Matrices are 2-dimensional structures that resemble a table, with rows and columns. Virtually all analytics techniques from simple regression to fancy neural networks operate on tabular data (7). Matrices are just one kind of data structure where we can represent tabular data.&lt;/p&gt;
+
+&lt;p&gt;Like vectors, every cell in a matrix has to have the same type. The reason for this is &lt;em&gt;optimization&lt;/em&gt;: at the bottom of it, all data types are represented by chunks of memory blocks, and having an &lt;em&gt;array&lt;/em&gt; of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;integers&lt;/code&gt;, for example, would be easier to manipulate because they all have the same byte size. It makes addressing to &lt;em&gt;n-th&lt;/em&gt; element much simpler as it eliminates the task of deducing the size of the data types per cell first which is unbearable for numerical computation. In other words, matrices are there to optimize our computational needs.&lt;/p&gt;
+
+&lt;p&gt;There are many ways to construct a matrix. We will cover some of the most common functions we can use in R.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;The Matrix constructor&lt;/strong&gt;. Let’s consider how we might write this matrix in R:&lt;/li&gt;
+&lt;/ul&gt;
+
+\[\mathbf{A} = \begin{bmatrix}
+    0 &amp;amp; -1 &amp;amp; -2 &amp;amp; -3 \\\\
+    1 &amp;amp; 0 &amp;amp; -1 &amp;amp; -2 \\\\
+    2 &amp;amp; 1 &amp;amp; 0 &amp;amp; -1 \\\\
+    \end{bmatrix}\]
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;matrix&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nrow&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ncol&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+     &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Matrix Transpose&lt;/strong&gt;. Now suppose we want to transpose matrix \(\mathbf{A} \), we formally express this in linear algebra as \( \mathbf{A}^{T}\); quiet naturally, we express this in R as:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+     &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Combining Matrices&lt;/strong&gt;. But what if we want to add rows to our matrix? Let us define our matrix:
+\(\mathbf{B} = \begin{bmatrix}
+ 1 \\\\
+ 2 \\\\
+ 3 \\\\
+\end{bmatrix}\)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;To bind this on our matrix &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;A&lt;/code&gt;, we simply write the following lines of code:&lt;/p&gt;
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;matrix&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nrow&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ncol&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+     &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cbind&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+     &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;    &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;The Matrix deconstructor&lt;/strong&gt;. Just like how we made our matrix from the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;c()&lt;/code&gt; function which effectively forms a vector data structure, we can deconstruct our matrix with the same function. Let’s deconstruct matrix \(\mathbf{A}\).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;factors&quot;&gt;Factors&lt;/h3&gt;
+&lt;p&gt;In statistical analysis, we might want to represent categorical variables in a data structure. In other languages, we might construct them using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enums&lt;/code&gt; and represent categories as constant integers. R has a way of expressing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enums&lt;/code&gt; with simpler implementation – we call it a Factor.&lt;/p&gt;
+
+&lt;p&gt;Let’s see how we can construct, and make simple operations in this data structure:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;The Syntax for constructing Factors: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;⟨variable_name⟩&amp;lt;-factor(⟨vector⟩)&lt;/code&gt;.
+    &lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;blood_type&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;A&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;B&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;O&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;O&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;A&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;B&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;AB&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;AB&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;blood_type&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;A&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;B&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;O&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;O&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;A&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;B&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;AB&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;AB&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;blood_factor&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;factor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;blood_type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;blood_factor&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;O&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;O&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AB&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AB&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Levels&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AB&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;O&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+    &lt;p&gt;To inspect the internal structure of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;blood_factor&lt;/code&gt; we enter:&lt;/p&gt;
+    &lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;blood_factor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+ &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Factor&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;w&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;levels&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;A&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;AB&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;B&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;O&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+    &lt;p&gt;Now, we can see that our categories are represented as integers (just like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enums&lt;/code&gt;).&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;data-frames&quot;&gt;Data Frames&lt;/h3&gt;
+&lt;p&gt;We can think of a data frame as the generalization of our matrix: it can contain different data types. Which makes it flexible in working with different &lt;a href=&quot;https://dcode.hashnode.dev/data-presentation&quot;&gt;structured&lt;/a&gt; data types.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Constructing Data Frame.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;employee_data&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data.frame&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emp_id&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; 
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;                            &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emp_name&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;John&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Rick&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Raymond&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Richard&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Christian&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;                            &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emp_salary&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;613.13&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;201.5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;701.50&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;324.25&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;420.15&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;employee_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emp_id&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emp_name&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emp_salary&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;John&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;613.13&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Rick&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;201.50&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Raymond&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;701.50&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Richard&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;324.25&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Christian&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;420.15&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Summary of Data Frame.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;summary&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;employee_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+     &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emp_id&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;       &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emp_name&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emp_salary&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   
+ &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Min.&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Christian&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Min.&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;201.5&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  
+ &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;st&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Qu.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;John&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;st&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Qu.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;324.2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  
+ &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Median&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Raymond&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Median&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;420.1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  
+ &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Mean&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Richard&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Mean&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;452.1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  
+ &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rd&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Qu.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Rick&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rd&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Qu.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;613.1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;  
+ &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Max.&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;                 &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Max.&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;701.5&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; 
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;Numeric indexing from a data frame.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;employee_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+   &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emp_name&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;John&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Rick&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Raymond&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Richard&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Christian&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;employee_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emp_id&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;emp_salary&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;613.13&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;201.50&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;701.50&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;324.25&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;420.15&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;control-structures-in-r&quot;&gt;Control Structures in R&lt;/h2&gt;
+
+&lt;p&gt;Control structures are building blocks of algorithms. R is a simple language, I will simply give you an example of how to implement these concepts in R as the output themselves are self-evident of its logic.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Conditional statements&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;An &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;if&lt;/code&gt; statement is used to test assertions using boolean expressions and handling proper controls once a condition is met i.e. the boolean expression resolves to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;true&lt;/code&gt;.  Syntax: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;if(&amp;lt;boolean_expr&amp;gt;){&amp;lt;sub_expr&amp;gt;}&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-10L&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;is.numeric&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)){&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;x is numeric.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;x is numeric.&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;An&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;if-else&lt;/code&gt; statement is used to test and handle and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;if&lt;/code&gt; an assertion is met an on occasions where it fails to satisfy our condition. Syntax: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;if(&amp;lt;boolean_expr&amp;gt;){&amp;lt;sub_expr&amp;gt;}else{&amp;lt;sub_expr&amp;gt;}&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;is.character&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)){&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;x is character type.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;x is not a character type.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;x is not a character type.&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;A&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;switch&lt;/code&gt; statement is used to test multiple cases. Syntax: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;switch(&amp;lt;expression&amp;gt;, &amp;lt;case_1&amp;gt;, &amp;lt;case_2&amp;gt;, ...,&amp;lt;case_n&amp;gt; )&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;switch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;+1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;+2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;+3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;As we noticed, a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;case&lt;/code&gt; can call functions.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Looping statements&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;A&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;for&lt;/code&gt;-loop is used for iterating elements in an iterable object e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vector&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;list&lt;/code&gt;, or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;expressions&lt;/code&gt;. Syntax: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;for(&amp;lt;element&amp;gt; in &amp;lt;elements&amp;gt;){&amp;lt;sub_expr&amp;gt;}&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;in&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)){&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vec&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;in&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vec&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;A &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;while&lt;/code&gt;-loop is also used for iterating values, in some occasions it might be more convenient to use over &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;for&lt;/code&gt;-loops. A programmer must be reminded to use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;while&lt;/code&gt;-loops should have a counter variable outside its &lt;a href=&quot;https://bityl.co/6ox2&quot;&gt;scope&lt;/a&gt;, in our case, we declared &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;i&lt;/code&gt; prior to our &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;while&lt;/code&gt;. Syntax: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;while(&amp;lt;boolean_expr&amp;gt;){&amp;lt;sub_expr&amp;gt;}&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;while&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+     &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+     &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;A &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;repeat&lt;/code&gt; statement achieves the same effect with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;while&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;for&lt;/code&gt;. Syntax: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;repeat{&amp;lt;sub_expr&amp;gt; &amp;lt;stop_condition&amp;gt;}&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;repeat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+     &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+     &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+     &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+         &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;break&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+     &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+ &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;9&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Break statements&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;next&lt;/code&gt; - skip the iteration of the loop and proceeds with the next iteration.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;break&lt;/code&gt; - breaks out of the loop, which effectively terminates it.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let’s consider them in action.&lt;/p&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;repeat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;next&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;     &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;break&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;9&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;constructing-user-defined-functions-in-r&quot;&gt;Constructing user-defined functions in R&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;To find out about built-in functions use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;help(&amp;lt;function_name&amp;gt;)&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;?&amp;lt;function_name&amp;gt;&lt;/code&gt;, or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;example(&amp;lt;function_name&amp;gt;)&lt;/code&gt; command&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Syntax for creating your own function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;lt;f_name&amp;gt; &amp;lt;- function(&amp;lt;params&amp;gt;){&amp;lt;body&amp;gt;}&lt;/code&gt;&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;^&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;9&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;81&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;installing-and-importing-packages&quot;&gt;Installing and Importing Packages&lt;/h2&gt;
+
+&lt;p&gt;To install an R package:&lt;/p&gt;
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;intall.packages&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;⟨package_name⟩&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;To import package:&lt;/p&gt;
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;library&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;⟨&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;package_name&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;⟩&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;hr /&gt;
+&lt;h1 id=&quot;time-to-start-hacking-in-r&quot;&gt;Time to start hacking in R!&lt;/h1&gt;
+
+&lt;iframe height=&quot;600px&quot; width=&quot;100%&quot; src=&quot;https://replit.com/@dcode2021/QuickStart?lite=true&quot; scrolling=&quot;no&quot; frameborder=&quot;no&quot; allowtransparency=&quot;true&quot; allowfullscreen=&quot;true&quot; sandbox=&quot;allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-modals&quot;&gt;&lt;/iframe&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;links-to-explore-further-on-r&quot;&gt;Links to explore further on R&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.r-tutor.com/&quot;&gt;R-Tutor&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.tutorialspoint.com/r&quot;&gt;TutorialsPoint in R&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://bityl.co/6oyY&quot;&gt;Hackerrank&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+&lt;h4 id=&quot;download-r-here&quot;&gt;Download R here:&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://cran.stat.upd.edu.ph/?fbclid=IwAR0UpY71fuBijsWgZYbNswfr_unS3Jb_TmqJDCSBI-jUvEKzlRZImOubZ8g&quot;&gt;CRAN distribution&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://bityl.co/6p6G&quot;&gt;RStudio for IDE&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+&lt;h2 id=&quot;references&quot;&gt;References&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Morandat, F., Hill, B., Osvald, L., Vitek, J. (2012). Evaluating the design of the R language: Objects and Functions for Data Analysis (PDF). ECOOP’12 Proceedings of the 26th European Conference on Object-Oriented Programming.&lt;/li&gt;
+  &lt;li&gt;Gentleman, Robert (9 December 2006). Individual Expertise profile of Robert Gentleman.&lt;/li&gt;
+  &lt;li&gt;Geyer, C.J. (2021). &lt;a href=&quot;https://bityl.co/6lhc&quot;&gt;Stat 8054 Lecture Notes: R as a Functional Programming Language&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Wickham, H. (2019). Advanced R. CRC Press.&lt;/li&gt;
+  &lt;li&gt;R Core Team (2018). An Introduction to R.&lt;/li&gt;
+  &lt;li&gt;Stirrup, J., &amp;amp; Ramos, R. O. (2017). Advanced analytics with R and Tableau: Advanced analytics using data classification, unsupervised learning and data visualization.&lt;/li&gt;
+  &lt;li&gt;Cady, F. (2017). The data science handbook. John Wiley &amp;amp; Sons.&lt;/li&gt;
+  &lt;li&gt;Yau, C. (n.d.). R Tutorial: An Introduction to Statistics. http://www.r-tutor.com/.&lt;/li&gt;
+&lt;/ol&gt;</content><author><name>Dave Amiana</name></author><category term="misc" /><summary type="html">R is a functional programming language that took inspiration from Scheme [1]. It was made by statisticians Ross Ihaka, and Robert Gentlemen [2] as they began to seek an alternative implementation of the S language. The name of R came from the names of its core developer, Robert, and Ross.</summary></entry><entry><title type="html">Recursion is Recursion!</title><link href="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/04/18/Recursion-is-Recursion.html" rel="alternate" type="text/html" title="Recursion is Recursion!" /><published>2021-04-18T00:00:00+08:00</published><updated>2021-04-18T00:00:00+08:00</updated><id>/https://adeeconometrics.github.io/dcode_blogs/misc/2021/04/18/Recursion-is-Recursion</id><content type="html" xml:base="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/04/18/Recursion-is-Recursion.html">&lt;blockquote&gt;
+  &lt;p&gt;Let’s talk about one of the cornerstones of Computer Science&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The idea of recursion has a dedicated field in Computer Science called &lt;a href=&quot;https://en.wikipedia.org/wiki/Computability_theory&quot;&gt;Recursion theory&lt;/a&gt;, since we can’t possibly cover the entirety of this field, we will just go over some of the key features that most computer science people have grown and love.&lt;/p&gt;
+
+&lt;p&gt;The idea that self-referent entities can reproduce themselves resonates almost entirely in Computer Science. Let’s take simple examples and realize the elegance of recursion. Consider the \(n!\) function.&lt;/p&gt;
+
+\[n! = n_k \times ... \times n_1 \times n_0\ |\ k\in \mathbb{N}\]
+
+&lt;p&gt;Another way of expressing this function is:&lt;/p&gt;
+
+\[\operatorname {fact} (n)={\begin{cases}1&amp;amp;{\mbox{if }}n=0 \\\\ n\cdot \operatorname {fact} (n-1)&amp;amp;{\mbox{if }} n&amp;gt;0 \end{cases}}\]
+
+&lt;p&gt;The computation of a factorial function takes in a number and binds that number with the resolution of a factorial function with a number - 1. Consider the pseudocode snippet below:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;function factorial(int:a):
+    if a == 0 return 1
+    return a * factorial(a-1)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Let’s implement the recursive function using a while-loop – this approach is called &lt;em&gt;iterative&lt;/em&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;function factorial(int: a):
+    int result = 1
+    while a &amp;gt; 1: 
+        result *= a
+        a -= 1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Let’s break down this code a little bit. Recursive function call mainly has two parts: a &lt;em&gt;base case&lt;/em&gt;, and an &lt;em&gt;inductive case&lt;/em&gt;. The base case specifies when the recursion reaches a halt while the inductive case sets the rules that reduce all successive cases toward the base case.&lt;/p&gt;
+
+&lt;p&gt;Generally, there are two types of recursion: &lt;em&gt;direct and indirect&lt;/em&gt;. The code we have seen above is direct recursion since the function directly calls itself. Indirect recursion happens when a function \(f(x)\) calls \(g(x)\) and \(g(x)\) calls \(f(x)\). Consider this:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;function print(int: a):
+    print a + &quot; × &quot;
+    return a * factorial(a-1)
+
+function factorial(int: a):
+    if a == 0 return 1
+    print(a)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;We can extend the category of indirect recursion through the chains of function calls that lead to a loop, that is:&lt;/p&gt;
+
+\[g_1 (x_1) \underrightarrow{\ calls\  } g_2(x_2) \underrightarrow{\ calls\  } ... \underrightarrow{\ calls\  } g_1(x_n)\]
+
+&lt;p&gt;Likewise, direct recursion can be stacked on top of each other forming what’s called a multiple recursion. The most common example of this is a tree traversal:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;function preorder(Node: node):
+    if node exists:
+        print node-&amp;gt;value
+        preorder(node-&amp;gt;right)
+        preorder(node-&amp;gt;left)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;hr /&gt;
+
+&lt;h3 id=&quot;recursion-and-iteration&quot;&gt;Recursion and Iteration&lt;/h3&gt;
+&lt;p&gt;As we have seen earlier, we can express a factorial computation in a recursive manner as well as in an iterative manner. But when should we use one over the other? Let’s take a look at the difference between recursion and iteration in performance in terms of time and space complexity, consider running the code below.&lt;/p&gt;
+
+&lt;iframe height=&quot;600px&quot; width=&quot;100%&quot; src=&quot;https://replit.com/@dcode2021/dcodecppseries?lite=true&quot; scrolling=&quot;no&quot; frameborder=&quot;no&quot; allowtransparency=&quot;true&quot; allowfullscreen=&quot;true&quot; sandbox=&quot;allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-modals&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;In the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clang++ std=c++17&lt;/code&gt; compiler for C++17, recursive functions tend to be more performant as it saves more time. However, in a recursive function, the &lt;a href=&quot;https://en.wikipedia.org/wiki/Call_stack&quot;&gt;stack frame&lt;/a&gt; keeps piling up 8 bytes of memory until it reaches the base case for which the recursive function resolves the value, and only until then, frees the memory allocated in the function’s stack frame. Observe:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://cdn.hashnode.com/res/hashnode/image/upload/v1618729597185/BdcyY9Pdk.gif&quot; alt=&quot;Real Python.gif&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;It is worth noting that this is generally not the case, some implementation of recursive functions, most notably in imperative languages, tend to be slower than the iterative approach. In functional programming languages, on the other hand, the implementation of a recursive function tends to be much faster than in iteration. However, some compilers have optimized for recursion to reduce the performance overhead.&lt;/p&gt;
+
+&lt;p&gt;Moreover, recursion is a mathematical concept, when we talk about recursion in the context of programming, we are essentially talking about how efficient recursion algorithms are implemented. In a functional paradigm wherein a worldview of seeing everything in the guise of a mathematical function, recursion is natural to the language therein their implementation is more optimized. There are some algorithms that work well with recursion in a functional programming language but become unbearable to compute in some languages. The reason is implementation.&lt;/p&gt;
+
+&lt;p&gt;Lucky for us, we can translate &lt;em&gt;any&lt;/em&gt; recursive programs into an iterative algorithm. This is due to the idea of &lt;strong&gt;Turing equivalence&lt;/strong&gt;: two computers \(P\) and \(Q\) are equivalent, if \( P \underleftrightarrow{\ simulates\  } Q  \). And since all Turing complete calculi are strictly equivalent in their expressive power, we can express recursive programs in an iterative approach. Note that this is always possible if we have an infinite amount of memory.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;I intentionally left the proof of μ-recursion and iteration being Turing complete. If you are interested you can consult the Church-Turing thesis [1] and Beoehm-Jacopini’s structured program theorem[2].&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This topic ultimately boils down to the context i.e. what language are you using and the manner in how you can conveniently express the solution of your problem.&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;h3 id=&quot;recursion-in-the-wild&quot;&gt;Recursion in the Wild&lt;/h3&gt;
+
+&lt;p&gt;A recursive entity unfolds itself until it reaches a halt, otherwise, infinitely many times. A language can be expressed using an elegant style of recursion. Take for example the grammar of the English language:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;Sentence&amp;gt;::= &amp;lt;Noun Phrase&amp;gt; | &amp;lt;Verb Phrase&amp;gt;;
+&amp;lt;Noun Phrase&amp;gt;::= &amp;lt;determiner&amp;gt; | &amp;lt;noun&amp;gt;;
+&amp;lt;Verb Phrase&amp;gt;::= &amp;lt;verb&amp;gt; | &amp;lt;Noun Phrase&amp;gt;;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;What we see here is a Backus-Naur Form (BNF) of English grammar. Grammatically speaking, we can generate an infinitely long chain of words forming one sentence. If we substitute the ordering of our BNF above we can construct the following:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;the dog ate the dog ate the dog ate the dog ate the dog ate the dog ...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Three words that unfold in an infinitely long sentence. To me, I find the idea of recursion particularly fascinating in grammars and formal languages for it bears the idea within which we can describe the world in our own languages.&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;h3 id=&quot;links-to-further-readings&quot;&gt;Links to further readings:&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Böhm, C., &amp;amp; Jacopini, G. (1966). &lt;a href=&quot;https://bityl.co/6Qjt&quot;&gt;Flow diagrams, Turing machines and languages with only two formation rules&lt;/a&gt;. Communications of the ACM, 9(5), 366-371.&lt;/li&gt;
+  &lt;li&gt;Copeland, B. J. (1997). &lt;a href=&quot;https://bityl.co/6Qju&quot;&gt;The Church-Turing thesis&lt;/a&gt;.&lt;/li&gt;
+  &lt;li&gt;Dean, Walter, &lt;a href=&quot;https://plato.stanford.edu/archives/spr2021/entries/recursive-functions&quot;&gt;“Recursive Functions”&lt;/a&gt;, The Stanford Encyclopedia of Philosophy (Spring 2021 Edition), Edward N. Zalta (ed.).&lt;/li&gt;
+&lt;/ol&gt;</content><author><name>Dave Amiana</name></author><category term="misc" /><summary type="html">Let’s talk about one of the cornerstones of Computer Science</summary></entry></feed>

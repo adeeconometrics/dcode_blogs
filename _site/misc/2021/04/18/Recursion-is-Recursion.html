@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang=" en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Recursion is Recursion! | Explorations in Computer Science</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="Recursion is Recursion!" />
+<meta name="author" content="Dave Amiana" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Let’s talk about one of the cornerstones of Computer Science" />
+<meta property="og:description" content="Let’s talk about one of the cornerstones of Computer Science" />
+<link rel="canonical" href="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/04/18/Recursion-is-Recursion.html" />
+<meta property="og:url" content="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/04/18/Recursion-is-Recursion.html" />
+<meta property="og:site_name" content="Explorations in Computer Science" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-04-18T00:00:00+08:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Recursion is Recursion!" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","headline":"Recursion is Recursion!","dateModified":"2021-04-18T00:00:00+08:00","datePublished":"2021-04-18T00:00:00+08:00","url":"/https://adeeconometrics.github.io/dcode_blogs/misc/2021/04/18/Recursion-is-Recursion.html","mainEntityOfPage":{"@type":"WebPage","@id":"/https://adeeconometrics.github.io/dcode_blogs/misc/2021/04/18/Recursion-is-Recursion.html"},"author":{"@type":"Person","name":"Dave Amiana"},"description":"Let’s talk about one of the cornerstones of Computer Science","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/https://adeeconometrics.github.io/dcode_blogs/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="/https://adeeconometrics.github.io/dcode_blogs/feed.xml" title="Explorations in Computer Science" />
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/https://adeeconometrics.github.io/dcode_blogs/%20/">Explorations in Computer Science</a><nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+      <label for="nav-trigger">
+        <span class="menu-icon">
+          <svg viewBox="0 0 18 15" width="18px" height="15px">
+            <path
+              d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z" />
+          </svg>
+        </span>
+      </label>
+
+      <div class="trigger"><a class="page-link" href="/https://adeeconometrics.github.io/dcode_blogs/about/">About my Blogs</a></div>
+    </nav>
+    <script type="text/x-mathjax-config">
+                MathJax.Hub.Config({
+                TeX: { equationNumbers: { autoNumber: "AMS" } }
+                });
+              </script>
+    <script type="text/javascript" async
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+  </div>
+</header><main class="page-content" aria-label="Content">
+    <div class="wrapper">
+      <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Recursion is Recursion!</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2021-04-18T00:00:00+08:00" itemprop="datePublished">
+        Apr 18, 2021
+      </time>• 
+      <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-author h-card" itemprop="name">Dave Amiana</span></span></p>
+    
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <blockquote>
+  <p>Let’s talk about one of the cornerstones of Computer Science</p>
+</blockquote>
+
+<p>The idea of recursion has a dedicated field in Computer Science called <a href="https://en.wikipedia.org/wiki/Computability_theory">Recursion theory</a>, since we can’t possibly cover the entirety of this field, we will just go over some of the key features that most computer science people have grown and love.</p>
+
+<p>The idea that self-referent entities can reproduce themselves resonates almost entirely in Computer Science. Let’s take simple examples and realize the elegance of recursion. Consider the \(n!\) function.</p>
+
+\[n! = n_k \times ... \times n_1 \times n_0\ |\ k\in \mathbb{N}\]
+
+<p>Another way of expressing this function is:</p>
+
+\[\operatorname {fact} (n)={\begin{cases}1&amp;{\mbox{if }}n=0 \\\\ n\cdot \operatorname {fact} (n-1)&amp;{\mbox{if }} n&gt;0 \end{cases}}\]
+
+<p>The computation of a factorial function takes in a number and binds that number with the resolution of a factorial function with a number - 1. Consider the pseudocode snippet below:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function factorial(int:a):
+    if a == 0 return 1
+    return a * factorial(a-1)
+</code></pre></div></div>
+<p>Let’s implement the recursive function using a while-loop – this approach is called <em>iterative</em>.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function factorial(int: a):
+    int result = 1
+    while a &gt; 1: 
+        result *= a
+        a -= 1
+</code></pre></div></div>
+
+<p>Let’s break down this code a little bit. Recursive function call mainly has two parts: a <em>base case</em>, and an <em>inductive case</em>. The base case specifies when the recursion reaches a halt while the inductive case sets the rules that reduce all successive cases toward the base case.</p>
+
+<p>Generally, there are two types of recursion: <em>direct and indirect</em>. The code we have seen above is direct recursion since the function directly calls itself. Indirect recursion happens when a function \(f(x)\) calls \(g(x)\) and \(g(x)\) calls \(f(x)\). Consider this:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function print(int: a):
+    print a + " × "
+    return a * factorial(a-1)
+
+function factorial(int: a):
+    if a == 0 return 1
+    print(a)
+</code></pre></div></div>
+<p>We can extend the category of indirect recursion through the chains of function calls that lead to a loop, that is:</p>
+
+\[g_1 (x_1) \underrightarrow{\ calls\  } g_2(x_2) \underrightarrow{\ calls\  } ... \underrightarrow{\ calls\  } g_1(x_n)\]
+
+<p>Likewise, direct recursion can be stacked on top of each other forming what’s called a multiple recursion. The most common example of this is a tree traversal:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function preorder(Node: node):
+    if node exists:
+        print node-&gt;value
+        preorder(node-&gt;right)
+        preorder(node-&gt;left)
+</code></pre></div></div>
+<hr />
+
+<h3 id="recursion-and-iteration">Recursion and Iteration</h3>
+<p>As we have seen earlier, we can express a factorial computation in a recursive manner as well as in an iterative manner. But when should we use one over the other? Let’s take a look at the difference between recursion and iteration in performance in terms of time and space complexity, consider running the code below.</p>
+
+<iframe height="600px" width="100%" src="https://replit.com/@dcode2021/dcodecppseries?lite=true" scrolling="no" frameborder="no" allowtransparency="true" allowfullscreen="true" sandbox="allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-modals"></iframe>
+
+<p>In the <code class="language-plaintext highlighter-rouge">clang++ std=c++17</code> compiler for C++17, recursive functions tend to be more performant as it saves more time. However, in a recursive function, the <a href="https://en.wikipedia.org/wiki/Call_stack">stack frame</a> keeps piling up 8 bytes of memory until it reaches the base case for which the recursive function resolves the value, and only until then, frees the memory allocated in the function’s stack frame. Observe:</p>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1618729597185/BdcyY9Pdk.gif" alt="Real Python.gif" /></p>
+
+<p>It is worth noting that this is generally not the case, some implementation of recursive functions, most notably in imperative languages, tend to be slower than the iterative approach. In functional programming languages, on the other hand, the implementation of a recursive function tends to be much faster than in iteration. However, some compilers have optimized for recursion to reduce the performance overhead.</p>
+
+<p>Moreover, recursion is a mathematical concept, when we talk about recursion in the context of programming, we are essentially talking about how efficient recursion algorithms are implemented. In a functional paradigm wherein a worldview of seeing everything in the guise of a mathematical function, recursion is natural to the language therein their implementation is more optimized. There are some algorithms that work well with recursion in a functional programming language but become unbearable to compute in some languages. The reason is implementation.</p>
+
+<p>Lucky for us, we can translate <em>any</em> recursive programs into an iterative algorithm. This is due to the idea of <strong>Turing equivalence</strong>: two computers \(P\) and \(Q\) are equivalent, if \( P \underleftrightarrow{\ simulates\  } Q  \). And since all Turing complete calculi are strictly equivalent in their expressive power, we can express recursive programs in an iterative approach. Note that this is always possible if we have an infinite amount of memory.</p>
+
+<blockquote>
+  <p>I intentionally left the proof of μ-recursion and iteration being Turing complete. If you are interested you can consult the Church-Turing thesis [1] and Beoehm-Jacopini’s structured program theorem[2].</p>
+</blockquote>
+
+<p>This topic ultimately boils down to the context i.e. what language are you using and the manner in how you can conveniently express the solution of your problem.</p>
+
+<hr />
+<h3 id="recursion-in-the-wild">Recursion in the Wild</h3>
+
+<p>A recursive entity unfolds itself until it reaches a halt, otherwise, infinitely many times. A language can be expressed using an elegant style of recursion. Take for example the grammar of the English language:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;Sentence&gt;::= &lt;Noun Phrase&gt; | &lt;Verb Phrase&gt;;
+&lt;Noun Phrase&gt;::= &lt;determiner&gt; | &lt;noun&gt;;
+&lt;Verb Phrase&gt;::= &lt;verb&gt; | &lt;Noun Phrase&gt;;
+</code></pre></div></div>
+<p>What we see here is a Backus-Naur Form (BNF) of English grammar. Grammatically speaking, we can generate an infinitely long chain of words forming one sentence. If we substitute the ordering of our BNF above we can construct the following:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>the dog ate the dog ate the dog ate the dog ate the dog ate the dog ...
+</code></pre></div></div>
+<p>Three words that unfold in an infinitely long sentence. To me, I find the idea of recursion particularly fascinating in grammars and formal languages for it bears the idea within which we can describe the world in our own languages.</p>
+
+<hr />
+<h3 id="links-to-further-readings">Links to further readings:</h3>
+
+<ol>
+  <li>Böhm, C., &amp; Jacopini, G. (1966). <a href="https://bityl.co/6Qjt">Flow diagrams, Turing machines and languages with only two formation rules</a>. Communications of the ACM, 9(5), 366-371.</li>
+  <li>Copeland, B. J. (1997). <a href="https://bityl.co/6Qju">The Church-Turing thesis</a>.</li>
+  <li>Dean, Walter, <a href="https://plato.stanford.edu/archives/spr2021/entries/recursive-functions">“Recursive Functions”</a>, The Stanford Encyclopedia of Philosophy (Spring 2021 Edition), Edward N. Zalta (ed.).</li>
+</ol>
+
+  </div><a class="u-url" href="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/04/18/Recursion-is-Recursion.html" hidden></a>
+</article>
+    </div>
+  </main><footer class="site-footer h-card">
+  <data class="u-url" href="/https://adeeconometrics.github.io/dcode_blogs/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/https://adeeconometrics.github.io/dcode_blogs/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Dave Amiana</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>Here is a documentation of my journey in Computer Science. 
+</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/https%3A%2F%2Fgithub.com%2Fadeeconometrics" title="https://github.com/adeeconometrics"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://www.linkedin.com/in/https%3A%2F%2Fwww.linkedin.com%2Fin%2Fdave-amiana-8548a91aa%2F" title="https://www.linkedin.com/in/dave-amiana-8548a91aa/"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#linkedin"></use></svg></a></li><li><a rel="me" href="https://twitter.com/https%3A%2F%2Ftwitter.com%2Fiamdeb25" title="https://twitter.com/iamdeb25"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#twitter"></use></svg></a></li><li><a href="https://dev.to/https%3A%2F%2Fdev.to%2Fiamdeb25" title="https://dev.to/iamdeb25"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#devto"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

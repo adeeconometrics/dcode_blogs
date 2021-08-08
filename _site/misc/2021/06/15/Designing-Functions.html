@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang=" en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Designing functions: The building blocks of Computer Programs | Explorations in Computer Science</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="Designing functions: The building blocks of Computer Programs" />
+<meta name="author" content="Dave Amiana" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="back to basics" />
+<meta property="og:description" content="back to basics" />
+<link rel="canonical" href="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/06/15/Designing-Functions.html" />
+<meta property="og:url" content="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/06/15/Designing-Functions.html" />
+<meta property="og:site_name" content="Explorations in Computer Science" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-06-15T00:00:00+08:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Designing functions: The building blocks of Computer Programs" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","headline":"Designing functions: The building blocks of Computer Programs","dateModified":"2021-06-15T00:00:00+08:00","datePublished":"2021-06-15T00:00:00+08:00","url":"/https://adeeconometrics.github.io/dcode_blogs/misc/2021/06/15/Designing-Functions.html","mainEntityOfPage":{"@type":"WebPage","@id":"/https://adeeconometrics.github.io/dcode_blogs/misc/2021/06/15/Designing-Functions.html"},"author":{"@type":"Person","name":"Dave Amiana"},"description":"back to basics","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/https://adeeconometrics.github.io/dcode_blogs/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="/https://adeeconometrics.github.io/dcode_blogs/feed.xml" title="Explorations in Computer Science" />
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/https://adeeconometrics.github.io/dcode_blogs/%20/">Explorations in Computer Science</a><nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+      <label for="nav-trigger">
+        <span class="menu-icon">
+          <svg viewBox="0 0 18 15" width="18px" height="15px">
+            <path
+              d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z" />
+          </svg>
+        </span>
+      </label>
+
+      <div class="trigger"><a class="page-link" href="/https://adeeconometrics.github.io/dcode_blogs/about/">About my Blogs</a></div>
+    </nav>
+  </div>
+</header><main class="page-content" aria-label="Content">
+    <div class="wrapper">
+      <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Designing functions: The building blocks of Computer Programs</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2021-06-15T00:00:00+08:00" itemprop="datePublished">
+        Jun 15, 2021
+      </time>• 
+      <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-author h-card" itemprop="name">Dave Amiana</span></span></p>
+    
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <blockquote>
+  <p>back to basics</p>
+</blockquote>
+
+<p>A function is an essential construct in programming. In the language that we use to convey a message on the computer, functions closely resemble a verb: <em>“the nuts and bolts of the language”</em> (S. Pinker, 2007). Put it in another way, functions serve as the primary constructs for expressing a set computational procedure in a programming language.</p>
+
+<hr />
+
+<p>It is better to break down the problem into manageable pieces. Solving the smaller part of the problem requires a computational procedure that we store in a function.</p>
+
+<p>This article will introduce the things to consider in designing and organizing functions.</p>
+
+<p>A function is a block of code that processes inputs and configures an output. One of the nice things about this is it breaks down our solution into a set of subroutines that we can reuse to solve other problems.</p>
+
+<p>Indeed, simple algorithms can be stored in one function, sometimes, it branches off into two or more: <strong>the question is when and why do we need indirection?</strong> The most obvious reason for this is <em>code-reusability</em>. We need to make conscious efforts into making our codebase sustainable i.e. reusable. To achieve this, we have to delegate the simplest version of a task in a function. Our goal is to minimize the <em>boilerplate code</em> (sections of code that are repeated in multiple places with little to no variation), <strong>we follow the virtue of not repeating ourselves</strong>.</p>
+
+<p>Functions are sufficient for developing sophisticated software systems. This technique is sometimes known as <em>modular programming</em>. This is one of the reasons why C is deemed elegant by some developers I know.</p>
+
+<p>There are three major concepts in modular programming:</p>
+<ul>
+  <li><em>Module</em> - a self-contained collection of functions that solves a problem (or subproblem).</li>
+  <li><em>Abstract Step</em> - A step in which some implementation details are unspecified. This step may define the routes where concrete functions may take place. In other words, it is a code block that delegates a group of functions necessary for solving the problem.</li>
+  <li><em>Concrete Step</em> - A realization of the abstract step that implements the logic for solving independent subproblems.</li>
+</ul>
+
+<hr />
+<h2 id="software-design-process-top-down-approach">Software Design Process: Top-Down Approach</h2>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1623724225735/nkFCw94Pc.png" alt="image.png" />
+<code class="language-plaintext highlighter-rouge">Figure 1.0</code>. Hierarchical solution tree (Dale, N. B., &amp; Weems, C., 2014).</p>
+
+<p>Steps for applying design principles in functions:</p>
+<ol>
+  <li><strong>Understand the problem</strong>. State its input requirements as well as the specifications for expected output.</li>
+  <li><strong>Write the major steps for solving the problem</strong>. Make a hierarchical solution tree (as seen in figure 1) and define the major problems you need to solve. As you go down to the bottom, problems become more concrete and simpler.</li>
+  <li><strong>Decide if the problem can be broken down into independent subproblems that we can work on separately</strong>. It is often simple enough when you can see how to implement it directly in a language. If you feel overwhelmed by writing it in a language, you are probably bypassing one or more levels of abstraction – you need to step back and think through how you can simplify this by breaking down the problem.</li>
+  <li><strong>Ensure that each function has exactly one job</strong>. Their purpose should be obvious in its name (it makes your code easier to read and self-documenting, so we must assure that the function name should clearly state its purpose).</li>
+  <li><strong>Document solution process</strong>. Documentation helps to make our codebase easier to maintain.</li>
+</ol>
+
+<hr />
+<h2 id="references">References:</h2>
+<ol>
+  <li>Pinker, S. (2007). Steven Pinker: What our language habits reveal.  <a href="https://www.youtube.com/watch?v=LjQM8PzCEY0">TED</a>.</li>
+  <li>Dale, N. B., &amp; Weems, C. (2014). Programming and problem solving with C++. Jones &amp; Bartlett Publishers.</li>
+  <li>DeNero, J. (n.d.).  <a href="https://composingprograms.com/pages/14-designing-functions.html">Composing Programs</a>.</li>
+</ol>
+
+  </div><a class="u-url" href="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/06/15/Designing-Functions.html" hidden></a>
+</article>
+    </div>
+  </main><footer class="site-footer h-card">
+  <data class="u-url" href="/https://adeeconometrics.github.io/dcode_blogs/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/https://adeeconometrics.github.io/dcode_blogs/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Dave Amiana</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>Here is a documentation of my journey in Computer Science. 
+</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/https%3A%2F%2Fgithub.com%2Fadeeconometrics" title="https://github.com/adeeconometrics"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://www.linkedin.com/in/https%3A%2F%2Fwww.linkedin.com%2Fin%2Fdave-amiana-8548a91aa%2F" title="https://www.linkedin.com/in/dave-amiana-8548a91aa/"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#linkedin"></use></svg></a></li><li><a rel="me" href="https://twitter.com/https%3A%2F%2Ftwitter.com%2Fiamdeb25" title="https://twitter.com/iamdeb25"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#twitter"></use></svg></a></li><li><a href="https://dev.to/https%3A%2F%2Fdev.to%2Fiamdeb25" title="https://dev.to/iamdeb25"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#devto"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

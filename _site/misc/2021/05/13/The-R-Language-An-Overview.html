@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang=" en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>The R Language: An Overview | Explorations in Computer Science</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="The R Language: An Overview" />
+<meta name="author" content="Dave Amiana" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="R is a functional programming language that took inspiration from Scheme [1]. It was made by statisticians Ross Ihaka, and Robert Gentlemen [2] as they began to seek an alternative implementation of the S language. The name of R came from the names of its core developer, Robert, and Ross." />
+<meta property="og:description" content="R is a functional programming language that took inspiration from Scheme [1]. It was made by statisticians Ross Ihaka, and Robert Gentlemen [2] as they began to seek an alternative implementation of the S language. The name of R came from the names of its core developer, Robert, and Ross." />
+<link rel="canonical" href="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/13/The-R-Language-An-Overview.html" />
+<meta property="og:url" content="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/13/The-R-Language-An-Overview.html" />
+<meta property="og:site_name" content="Explorations in Computer Science" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-05-13T00:00:00+08:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="The R Language: An Overview" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","headline":"The R Language: An Overview","dateModified":"2021-05-13T00:00:00+08:00","datePublished":"2021-05-13T00:00:00+08:00","url":"/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/13/The-R-Language-An-Overview.html","mainEntityOfPage":{"@type":"WebPage","@id":"/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/13/The-R-Language-An-Overview.html"},"author":{"@type":"Person","name":"Dave Amiana"},"description":"R is a functional programming language that took inspiration from Scheme [1]. It was made by statisticians Ross Ihaka, and Robert Gentlemen [2] as they began to seek an alternative implementation of the S language. The name of R came from the names of its core developer, Robert, and Ross.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/https://adeeconometrics.github.io/dcode_blogs/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="/https://adeeconometrics.github.io/dcode_blogs/feed.xml" title="Explorations in Computer Science" />
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/https://adeeconometrics.github.io/dcode_blogs/%20/">Explorations in Computer Science</a><nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+      <label for="nav-trigger">
+        <span class="menu-icon">
+          <svg viewBox="0 0 18 15" width="18px" height="15px">
+            <path
+              d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z" />
+          </svg>
+        </span>
+      </label>
+
+      <div class="trigger"><a class="page-link" href="/https://adeeconometrics.github.io/dcode_blogs/about/">About my Blogs</a></div>
+    </nav>
+    <script type="text/x-mathjax-config">
+                MathJax.Hub.Config({
+                TeX: { equationNumbers: { autoNumber: "AMS" } }
+                });
+              </script>
+    <script type="text/javascript" async
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+  </div>
+</header><main class="page-content" aria-label="Content">
+    <div class="wrapper">
+      <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">The R Language: An Overview</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2021-05-13T00:00:00+08:00" itemprop="datePublished">
+        May 13, 2021
+      </time>• 
+      <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-author h-card" itemprop="name">Dave Amiana</span></span></p>
+    
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>R is a functional programming language that took inspiration from Scheme [1]. It was made by statisticians Ross Ihaka, and Robert Gentlemen [2] as they began to seek an alternative implementation of the <a href="https://bityl.co/6lIe">S language</a>. The name of <strong>R</strong> came from the names of its core developer, Robert, and Ross.</p>
+
+<p>Functional programming requires another way of thinking about functions. First-class functions are distinct features in R which means that you can do anything with functions as you can do with <strong>RObjects</strong> – main data structures of R. As a result, you are allowed to assign functions to variables, store them in <em>lists</em>, pass them as arguments, and return them as a result of a function [3]. However, R is not a purely functional language in the sense that it does not require you to write pure functions [3-4]. However, functional programming can still be adapted; this lends to good practice for the problem domain of data analysis [3].</p>
+
+<p>R, like Python, is a dynamically typed programming language which means that data types need not be specified as in <code class="language-plaintext highlighter-rouge">int x</code> in C.</p>
+
+<p>R is an example of a domain-specific language, it is intended to do advanced statistical analyses and modeling, which makes its name in Data Science and Machine Learning.</p>
+
+<p>This article will cover the core features of R that are sufficient for you to get started. I am new to this language, so let’s welcome each other! I will end this with links to my resources in learning this language, hopefully bringing your learning a step further.</p>
+
+<hr />
+<h2 id="overview-of-the-language">Overview of the language</h2>
+<p>R is mainly used by scientists, statisticians, and analysts for exploring subtle features of their data. <em>It is an integrated suite of software that supports data manipulation, calculation, and graphical display such as plotting functionalities</em> [5].</p>
+
+<p>From the R Core developers, R supports the following features:</p>
+<ol>
+  <li>Effective data handling and storage facility.</li>
+  <li>Supports a suite of operators for calculations on arrays, in particular matrices.</li>
+  <li>R has a large, coherent, integrated collection of intermediate tools for data analysis.</li>
+  <li>R features graphical facilities for data analysis and display either directly at the computer or on hard copy.</li>
+  <li>R has a well-developed, simple, and effective programming language (called ‘S’) which includes conditionals, loops, user-defined recursive functions, and input and output facilities. (Indeed most of the system-supplied functions are themselves written in the S language.)</li>
+</ol>
+
+<hr />
+<h2 id="data-types-in-r">Data Types in R</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Logical</td>
+      <td><code class="language-plaintext highlighter-rouge">TRUE</code>, <code class="language-plaintext highlighter-rouge">FALSE</code></td>
+    </tr>
+    <tr>
+      <td>Numeric</td>
+      <td><code class="language-plaintext highlighter-rouge">95.678</code></td>
+    </tr>
+    <tr>
+      <td>Integer</td>
+      <td><code class="language-plaintext highlighter-rouge">10</code></td>
+    </tr>
+    <tr>
+      <td>Complex</td>
+      <td><code class="language-plaintext highlighter-rouge">9+3i</code></td>
+    </tr>
+    <tr>
+      <td>Character</td>
+      <td><code class="language-plaintext highlighter-rouge">'a'</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+<h2 id="operators-in-r">Operators in R</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Operators</th>
+      <th>Name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">&lt;-</code>, <code class="language-plaintext highlighter-rouge">-&gt;</code>, <code class="language-plaintext highlighter-rouge">=</code>, <code class="language-plaintext highlighter-rouge">&lt;&lt;-</code>, <code class="language-plaintext highlighter-rouge">-&gt;&gt;</code></td>
+      <td>Assignment operator</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">&lt;</code></td>
+      <td>less than i.e. <code class="language-plaintext highlighter-rouge">x &lt; y</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">&gt;</code></td>
+      <td>greater than i.e. <code class="language-plaintext highlighter-rouge">x &gt; y</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">==</code></td>
+      <td>equal to i.e. <code class="language-plaintext highlighter-rouge">x == y</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">&lt;=</code></td>
+      <td>less than or equal to i.e. <code class="language-plaintext highlighter-rouge">x &lt;= y</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">!=</code></td>
+      <td>not equal to i.e. <code class="language-plaintext highlighter-rouge">x !=  y</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">!</code></td>
+      <td>not i.e. <code class="language-plaintext highlighter-rouge">!x</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">&amp;</code></td>
+      <td>and i.e. <code class="language-plaintext highlighter-rouge">x &amp; y</code></td>
+    </tr>
+    <tr>
+      <td>I</td>
+      <td>or i.e. x I y</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+<h2 id="valid-variable-names">Valid Variable names</h2>
+
+<p>Variables are constructs that represent the contents of memory. We can access the values of these memory blocks by naming them and referring to them in our expressions e.g. <code class="language-plaintext highlighter-rouge">a &lt;- 1</code> and we assign the value of <code class="language-plaintext highlighter-rouge">a</code> to a new variable <code class="language-plaintext highlighter-rouge">b</code>: <code class="language-plaintext highlighter-rouge">b&lt;-a</code>.</p>
+
+<p>Here are a couple of rules to name your variables:</p>
+<ul>
+  <li>Your variable should <strong>not</strong> begin with a number e.g. <code class="language-plaintext highlighter-rouge">200var</code>.</li>
+  <li>Your variable should only contain letters, numbers, dot, and underscore e.g. <code class="language-plaintext highlighter-rouge">var_2</code>.</li>
+  <li>Your variable should <strong>not</strong> start with underscore e.g. <code class="language-plaintext highlighter-rouge">_var</code>.</li>
+  <li>If your variable starts with a dot (<code class="language-plaintext highlighter-rouge">.</code>), it should <strong>not</strong> be followed by a number e.g. <code class="language-plaintext highlighter-rouge">.2var</code>.</li>
+</ul>
+
+<p>As we demonstrated earlier, we bind a value to our named entity by using our assignment operator. By convention <code class="language-plaintext highlighter-rouge">&lt;-</code> is usually used in practice.</p>
+
+<hr />
+
+<h2 id="bnf-of-r-expression">BNF of R Expression</h2>
+<p>An expression generates a value, that is <code class="language-plaintext highlighter-rouge">a&amp;b</code> is an expression. Backus-Naur Form (BNF) of grammar succinctly describes all the valid instances of an R expression.</p>
+
+<pre><code class="language-None">&lt;expr&gt;:= &lt;var&gt; &lt;op&gt; &lt;var&gt; | &lt;op&gt; &lt;var&gt;
+&lt;op&gt;:= assingment_operator | &lt; | &gt; | &lt;= | =&gt; | != | ! | | | &amp; 
+
+</code></pre>
+<p>Here <code class="language-plaintext highlighter-rouge">a|b</code> indicates that either the form of <code class="language-plaintext highlighter-rouge">a</code> or <code class="language-plaintext highlighter-rouge">b</code> is valid. For example,<code class="language-plaintext highlighter-rouge">!a</code> is a valid instance of this grammar as well as <code class="language-plaintext highlighter-rouge">a!=b</code>.</p>
+
+<hr />
+<h2 id="fundamental-data-structures-in-r">Fundamental Data Structures in R</h2>
+
+<p>If you have ever been in a data structures course or had used data structures in other languages, R’s core data structure might seem a little bit odd. At least this was the case for me when I studied this language two weeks ago. This led me to discover the intentions of writing this language: R is a language designed for scientists, statisticians, and data analysts. Now it makes so much sense why we have the following data structures in R: statistical methods operate in <a href="https://bityl.co/6orn">vector space</a>.</p>
+
+<p>Since R is intended to be used in the domain of statistical analyses, the main underlying structure or R is a vector. That said, R is highly optimized to work with vectors. So let’s begin with this structure.</p>
+
+<h3 id="vector">Vector</h3>
+<p>A vector is a fundamental data type in R. It <strong>cannot</strong> contain a mixture of data types i.e <code class="language-plaintext highlighter-rouge">c(1, "hello world")</code>. <code class="language-plaintext highlighter-rouge">c()</code> is a built-in function that converts an item into a vector.</p>
+
+<h3 id="lists">Lists</h3>
+<p>We can think of lists are generic vectors that can contain other objects not only limited to one data type e.g. <code class="language-plaintext highlighter-rouge">a = list("a", 3, c(2,3,5))</code>. As we can notice, we can even make a list of functions in R. Even further, we can make lists of lists in R.</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">list()</code> is a list constructor for making a list.</li>
+  <li><code class="language-plaintext highlighter-rouge">a[&lt;index&gt;]</code> is an example of how we can index a value in a list.</li>
+</ul>
+
+<p>Notice how Lists are constructed from a vector by the function <code class="language-plaintext highlighter-rouge">c()</code>. This is also the same with other fundamental structures in R.</p>
+
+<h3 id="matrices">Matrices</h3>
+
+<p>Matrices are 2-dimensional structures that resemble a table, with rows and columns. Virtually all analytics techniques from simple regression to fancy neural networks operate on tabular data (7). Matrices are just one kind of data structure where we can represent tabular data.</p>
+
+<p>Like vectors, every cell in a matrix has to have the same type. The reason for this is <em>optimization</em>: at the bottom of it, all data types are represented by chunks of memory blocks, and having an <em>array</em> of <code class="language-plaintext highlighter-rouge">integers</code>, for example, would be easier to manipulate because they all have the same byte size. It makes addressing to <em>n-th</em> element much simpler as it eliminates the task of deducing the size of the data types per cell first which is unbearable for numerical computation. In other words, matrices are there to optimize our computational needs.</p>
+
+<p>There are many ways to construct a matrix. We will cover some of the most common functions we can use in R.</p>
+
+<ul>
+  <li><strong>The Matrix constructor</strong>. Let’s consider how we might write this matrix in R:</li>
+</ul>
+
+\[\mathbf{A} = \begin{bmatrix}
+    0 &amp; -1 &amp; -2 &amp; -3 \\\\
+    1 &amp; 0 &amp; -1 &amp; -2 \\\\
+    2 &amp; 1 &amp; 0 &amp; -1 \\\\
+    \end{bmatrix}\]
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">(</span><span class="nf">c</span><span class="p">(</span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">-1</span><span class="p">,</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">-2</span><span class="p">,</span><span class="w"> </span><span class="m">-1</span><span class="p">,</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="m">-3</span><span class="p">,</span><span class="w"> </span><span class="m">-2</span><span class="p">,</span><span class="w"> </span><span class="m">-1</span><span class="p">),</span><span class="w"> </span><span class="n">nrow</span><span class="o">=</span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="n">ncol</span><span class="o">=</span><span class="m">4</span><span class="p">)</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">A</span><span class="w">
+     </span><span class="p">[,</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="p">[,</span><span class="m">2</span><span class="p">]</span><span class="w"> </span><span class="p">[,</span><span class="m">3</span><span class="p">]</span><span class="w"> </span><span class="p">[,</span><span class="m">4</span><span class="p">]</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">,]</span><span class="w">    </span><span class="m">0</span><span class="w">   </span><span class="m">-1</span><span class="w">   </span><span class="m">-2</span><span class="w">   </span><span class="m">-3</span><span class="w">
+</span><span class="p">[</span><span class="m">2</span><span class="p">,]</span><span class="w">    </span><span class="m">1</span><span class="w">    </span><span class="m">0</span><span class="w">   </span><span class="m">-1</span><span class="w">   </span><span class="m">-2</span><span class="w">
+</span><span class="p">[</span><span class="m">3</span><span class="p">,]</span><span class="w">    </span><span class="m">2</span><span class="w">    </span><span class="m">1</span><span class="w">    </span><span class="m">0</span><span class="w">   </span><span class="m">-1</span><span class="w">
+</span></code></pre></div></div>
+<ul>
+  <li><strong>Matrix Transpose</strong>. Now suppose we want to transpose matrix \(\mathbf{A} \), we formally express this in linear algebra as \( \mathbf{A}^{T}\); quiet naturally, we express this in R as:</li>
+</ul>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">t</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="w">
+     </span><span class="p">[,</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="p">[,</span><span class="m">2</span><span class="p">]</span><span class="w"> </span><span class="p">[,</span><span class="m">3</span><span class="p">]</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">,]</span><span class="w">    </span><span class="m">0</span><span class="w">    </span><span class="m">1</span><span class="w">    </span><span class="m">2</span><span class="w">
+</span><span class="p">[</span><span class="m">2</span><span class="p">,]</span><span class="w">   </span><span class="m">-1</span><span class="w">    </span><span class="m">0</span><span class="w">    </span><span class="m">1</span><span class="w">
+</span><span class="p">[</span><span class="m">3</span><span class="p">,]</span><span class="w">   </span><span class="m">-2</span><span class="w">   </span><span class="m">-1</span><span class="w">    </span><span class="m">0</span><span class="w">
+</span><span class="p">[</span><span class="m">4</span><span class="p">,]</span><span class="w">   </span><span class="m">-3</span><span class="w">   </span><span class="m">-2</span><span class="w">   </span><span class="m">-1</span><span class="w">
+</span></code></pre></div></div>
+<ul>
+  <li><strong>Combining Matrices</strong>. But what if we want to add rows to our matrix? Let us define our matrix:
+\(\mathbf{B} = \begin{bmatrix}
+ 1 \\\\
+ 2 \\\\
+ 3 \\\\
+\end{bmatrix}\)</li>
+</ul>
+
+<p>To bind this on our matrix <code class="language-plaintext highlighter-rouge">A</code>, we simply write the following lines of code:</p>
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">B</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">(</span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="m">2</span><span class="p">,</span><span class="m">3</span><span class="p">),</span><span class="w"> </span><span class="n">nrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="n">ncol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">B</span><span class="w">
+     </span><span class="p">[,</span><span class="m">1</span><span class="p">]</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">,]</span><span class="w">    </span><span class="m">1</span><span class="w">
+</span><span class="p">[</span><span class="m">2</span><span class="p">,]</span><span class="w">    </span><span class="m">2</span><span class="w">
+</span><span class="p">[</span><span class="m">3</span><span class="p">,]</span><span class="w">    </span><span class="m">3</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cbind</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">)</span><span class="w">
+     </span><span class="p">[,</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="p">[,</span><span class="m">2</span><span class="p">]</span><span class="w"> </span><span class="p">[,</span><span class="m">3</span><span class="p">]</span><span class="w"> </span><span class="p">[,</span><span class="m">4</span><span class="p">]</span><span class="w"> </span><span class="p">[,</span><span class="m">5</span><span class="p">]</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">,]</span><span class="w">    </span><span class="m">0</span><span class="w">   </span><span class="m">-1</span><span class="w">   </span><span class="m">-2</span><span class="w">   </span><span class="m">-3</span><span class="w">    </span><span class="m">1</span><span class="w">
+</span><span class="p">[</span><span class="m">2</span><span class="p">,]</span><span class="w">    </span><span class="m">1</span><span class="w">    </span><span class="m">0</span><span class="w">   </span><span class="m">-1</span><span class="w">   </span><span class="m">-2</span><span class="w">    </span><span class="m">2</span><span class="w">
+</span><span class="p">[</span><span class="m">3</span><span class="p">,]</span><span class="w">    </span><span class="m">2</span><span class="w">    </span><span class="m">1</span><span class="w">    </span><span class="m">0</span><span class="w">   </span><span class="m">-1</span><span class="w">    </span><span class="m">3</span><span class="w">
+
+</span></code></pre></div></div>
+
+<ul>
+  <li><strong>The Matrix deconstructor</strong>. Just like how we made our matrix from the <code class="language-plaintext highlighter-rouge">c()</code> function which effectively forms a vector data structure, we can deconstruct our matrix with the same function. Let’s deconstruct matrix \(\mathbf{A}\).</li>
+</ul>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="n">B</span><span class="p">)</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">3</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="factors">Factors</h3>
+<p>In statistical analysis, we might want to represent categorical variables in a data structure. In other languages, we might construct them using <code class="language-plaintext highlighter-rouge">enums</code> and represent categories as constant integers. R has a way of expressing <code class="language-plaintext highlighter-rouge">enums</code> with simpler implementation – we call it a Factor.</p>
+
+<p>Let’s see how we can construct, and make simple operations in this data structure:</p>
+
+<ul>
+  <li>The Syntax for constructing Factors: <code class="language-plaintext highlighter-rouge">⟨variable_name⟩&lt;-factor(⟨vector⟩)</code>.
+    <div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">blood_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"A"</span><span class="p">,</span><span class="s2">"B"</span><span class="p">,</span><span class="w"> </span><span class="s2">"O"</span><span class="p">,</span><span class="w"> </span><span class="s2">"O"</span><span class="p">,</span><span class="w"> </span><span class="s2">"A"</span><span class="p">,</span><span class="w"> </span><span class="s2">"B"</span><span class="p">,</span><span class="w"> </span><span class="s2">"AB"</span><span class="p">,</span><span class="w"> </span><span class="s2">"AB"</span><span class="p">)</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">blood_type</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="s2">"A"</span><span class="w">  </span><span class="s2">"B"</span><span class="w">  </span><span class="s2">"O"</span><span class="w">  </span><span class="s2">"O"</span><span class="w">  </span><span class="s2">"A"</span><span class="w">  </span><span class="s2">"B"</span><span class="w">  </span><span class="s2">"AB"</span><span class="w"> </span><span class="s2">"AB"</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">blood_factor</span><span class="w"> </span><span class="o">&lt;-</span><span class="n">factor</span><span class="p">(</span><span class="n">blood_type</span><span class="p">)</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">blood_factor</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="n">A</span><span class="w">  </span><span class="n">B</span><span class="w">  </span><span class="n">O</span><span class="w">  </span><span class="n">O</span><span class="w">  </span><span class="n">A</span><span class="w">  </span><span class="n">B</span><span class="w">  </span><span class="n">AB</span><span class="w"> </span><span class="n">AB</span><span class="w">
+</span><span class="n">Levels</span><span class="o">:</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="n">AB</span><span class="w"> </span><span class="n">B</span><span class="w"> </span><span class="n">O</span><span class="w">
+</span></code></pre></div>    </div>
+    <p>To inspect the internal structure of <code class="language-plaintext highlighter-rouge">blood_factor</code> we enter:</p>
+    <div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">str</span><span class="p">(</span><span class="n">blood_factor</span><span class="p">)</span><span class="w">
+ </span><span class="n">Factor</span><span class="w"> </span><span class="n">w</span><span class="o">/</span><span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="n">levels</span><span class="w"> </span><span class="s2">"A"</span><span class="p">,</span><span class="s2">"AB"</span><span class="p">,</span><span class="s2">"B"</span><span class="p">,</span><span class="s2">"O"</span><span class="o">:</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span></code></pre></div>    </div>
+    <p>Now, we can see that our categories are represented as integers (just like <code class="language-plaintext highlighter-rouge">enums</code>).</p>
+  </li>
+</ul>
+
+<h3 id="data-frames">Data Frames</h3>
+<p>We can think of a data frame as the generalization of our matrix: it can contain different data types. Which makes it flexible in working with different <a href="https://dcode.hashnode.dev/data-presentation">structured</a> data types.</p>
+
+<ul>
+  <li>Constructing Data Frame.</li>
+</ul>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">employee_data</span><span class="w"> </span><span class="o">&lt;-</span><span class="n">data.frame</span><span class="p">(</span><span class="n">emp_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="m">5</span><span class="p">),</span><span class="w"> 
+</span><span class="o">+</span><span class="w">                            </span><span class="n">emp_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"John"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Rick"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Raymond"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Richard"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Christian"</span><span class="p">),</span><span class="w">
+</span><span class="o">+</span><span class="w">                            </span><span class="n">emp_salary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">613.13</span><span class="p">,</span><span class="w"> </span><span class="m">201.5</span><span class="p">,</span><span class="w"> </span><span class="m">701.50</span><span class="p">,</span><span class="w"> </span><span class="m">324.25</span><span class="p">,</span><span class="w"> </span><span class="m">420.15</span><span class="p">))</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">print</span><span class="p">(</span><span class="n">employee_data</span><span class="p">)</span><span class="w">
+  </span><span class="n">emp_id</span><span class="w">  </span><span class="n">emp_name</span><span class="w"> </span><span class="n">emp_salary</span><span class="w">
+</span><span class="m">1</span><span class="w">      </span><span class="m">1</span><span class="w">      </span><span class="n">John</span><span class="w">     </span><span class="m">613.13</span><span class="w">
+</span><span class="m">2</span><span class="w">      </span><span class="m">2</span><span class="w">      </span><span class="n">Rick</span><span class="w">     </span><span class="m">201.50</span><span class="w">
+</span><span class="m">3</span><span class="w">      </span><span class="m">3</span><span class="w">   </span><span class="n">Raymond</span><span class="w">     </span><span class="m">701.50</span><span class="w">
+</span><span class="m">4</span><span class="w">      </span><span class="m">4</span><span class="w">   </span><span class="n">Richard</span><span class="w">     </span><span class="m">324.25</span><span class="w">
+</span><span class="m">5</span><span class="w">      </span><span class="m">5</span><span class="w"> </span><span class="n">Christian</span><span class="w">     </span><span class="m">420.15</span><span class="w">
+</span></code></pre></div></div>
+
+<ul>
+  <li>Summary of Data Frame.</li>
+</ul>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">summary</span><span class="p">(</span><span class="n">employee_data</span><span class="p">)</span><span class="w">
+     </span><span class="n">emp_id</span><span class="w">       </span><span class="n">emp_name</span><span class="w">   </span><span class="n">emp_salary</span><span class="w">   
+ </span><span class="n">Min.</span><span class="w">   </span><span class="o">:</span><span class="m">1</span><span class="w">   </span><span class="n">Christian</span><span class="o">:</span><span class="m">1</span><span class="w">   </span><span class="n">Min.</span><span class="w">   </span><span class="o">:</span><span class="m">201.5</span><span class="w">  
+ </span><span class="m">1</span><span class="n">st</span><span class="w"> </span><span class="n">Qu.</span><span class="o">:</span><span class="m">2</span><span class="w">   </span><span class="n">John</span><span class="w">     </span><span class="o">:</span><span class="m">1</span><span class="w">   </span><span class="m">1</span><span class="n">st</span><span class="w"> </span><span class="n">Qu.</span><span class="o">:</span><span class="m">324.2</span><span class="w">  
+ </span><span class="n">Median</span><span class="w"> </span><span class="o">:</span><span class="m">3</span><span class="w">   </span><span class="n">Raymond</span><span class="w">  </span><span class="o">:</span><span class="m">1</span><span class="w">   </span><span class="n">Median</span><span class="w"> </span><span class="o">:</span><span class="m">420.1</span><span class="w">  
+ </span><span class="n">Mean</span><span class="w">   </span><span class="o">:</span><span class="m">3</span><span class="w">   </span><span class="n">Richard</span><span class="w">  </span><span class="o">:</span><span class="m">1</span><span class="w">   </span><span class="n">Mean</span><span class="w">   </span><span class="o">:</span><span class="m">452.1</span><span class="w">  
+ </span><span class="m">3</span><span class="n">rd</span><span class="w"> </span><span class="n">Qu.</span><span class="o">:</span><span class="m">4</span><span class="w">   </span><span class="n">Rick</span><span class="w">     </span><span class="o">:</span><span class="m">1</span><span class="w">   </span><span class="m">3</span><span class="n">rd</span><span class="w"> </span><span class="n">Qu.</span><span class="o">:</span><span class="m">613.1</span><span class="w">  
+ </span><span class="n">Max.</span><span class="w">   </span><span class="o">:</span><span class="m">5</span><span class="w">                 </span><span class="n">Max.</span><span class="w">   </span><span class="o">:</span><span class="m">701.5</span><span class="w"> 
+</span></code></pre></div></div>
+<ul>
+  <li>Numeric indexing from a data frame.</li>
+</ul>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">employee_data</span><span class="p">[</span><span class="m">2</span><span class="p">]</span><span class="w">
+   </span><span class="n">emp_name</span><span class="w">
+</span><span class="m">1</span><span class="w">      </span><span class="n">John</span><span class="w">
+</span><span class="m">2</span><span class="w">      </span><span class="n">Rick</span><span class="w">
+</span><span class="m">3</span><span class="w">   </span><span class="n">Raymond</span><span class="w">
+</span><span class="m">4</span><span class="w">   </span><span class="n">Richard</span><span class="w">
+</span><span class="m">5</span><span class="w"> </span><span class="n">Christian</span><span class="w">
+
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">employee_data</span><span class="p">[</span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="m">3</span><span class="p">)]</span><span class="w">
+  </span><span class="n">emp_id</span><span class="w"> </span><span class="n">emp_salary</span><span class="w">
+</span><span class="m">1</span><span class="w">      </span><span class="m">1</span><span class="w">     </span><span class="m">613.13</span><span class="w">
+</span><span class="m">2</span><span class="w">      </span><span class="m">2</span><span class="w">     </span><span class="m">201.50</span><span class="w">
+</span><span class="m">3</span><span class="w">      </span><span class="m">3</span><span class="w">     </span><span class="m">701.50</span><span class="w">
+</span><span class="m">4</span><span class="w">      </span><span class="m">4</span><span class="w">     </span><span class="m">324.25</span><span class="w">
+</span><span class="m">5</span><span class="w">      </span><span class="m">5</span><span class="w">     </span><span class="m">420.15</span><span class="w">
+</span></code></pre></div></div>
+
+<hr />
+<h2 id="control-structures-in-r">Control Structures in R</h2>
+
+<p>Control structures are building blocks of algorithms. R is a simple language, I will simply give you an example of how to implement these concepts in R as the output themselves are self-evident of its logic.</p>
+
+<p><strong>Conditional statements</strong></p>
+<ul>
+  <li>An <code class="language-plaintext highlighter-rouge">if</code> statement is used to test assertions using boolean expressions and handling proper controls once a condition is met i.e. the boolean expression resolves to <code class="language-plaintext highlighter-rouge">true</code>.  Syntax: <code class="language-plaintext highlighter-rouge">if(&lt;boolean_expr&gt;){&lt;sub_expr&gt;}</code>.</li>
+</ul>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">x</span><span class="o">&lt;</span><span class="m">-10L</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="nf">is.numeric</span><span class="p">(</span><span class="n">x</span><span class="p">)){</span><span class="w"> </span><span class="n">print</span><span class="p">(</span><span class="s2">"x is numeric."</span><span class="p">)}</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="s2">"x is numeric."</span><span class="w">
+</span></code></pre></div></div>
+
+<ul>
+  <li>An<code class="language-plaintext highlighter-rouge">if-else</code> statement is used to test and handle and <code class="language-plaintext highlighter-rouge">if</code> an assertion is met an on occasions where it fails to satisfy our condition. Syntax: <code class="language-plaintext highlighter-rouge">if(&lt;boolean_expr&gt;){&lt;sub_expr&gt;}else{&lt;sub_expr&gt;}</code>.</li>
+</ul>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="nf">is.character</span><span class="p">(</span><span class="n">x</span><span class="p">)){</span><span class="w"> </span><span class="n">print</span><span class="p">(</span><span class="s2">"x is character type."</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w">
+  </span><span class="k">else</span><span class="p">{</span><span class="w"> </span><span class="n">print</span><span class="p">(</span><span class="s2">"x is not a character type."</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="s2">"x is not a character type."</span><span class="w">
+</span></code></pre></div></div>
+
+<ul>
+  <li>A<code class="language-plaintext highlighter-rouge">switch</code> statement is used to test multiple cases. Syntax: <code class="language-plaintext highlighter-rouge">switch(&lt;expression&gt;, &lt;case_1&gt;, &lt;case_2&gt;, ...,&lt;case_n&gt; )</code>.</li>
+</ul>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">3</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">switch</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="o">&lt;-</span><span class="n">y</span><span class="m">+1</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="o">&lt;-</span><span class="n">y</span><span class="m">+2</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="o">&lt;-</span><span class="n">y</span><span class="m">+3</span><span class="p">)</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">6</span><span class="w">
+</span></code></pre></div></div>
+<p>As we noticed, a <code class="language-plaintext highlighter-rouge">case</code> can call functions.</p>
+
+<p><strong>Looping statements</strong></p>
+
+<ul>
+  <li>A<code class="language-plaintext highlighter-rouge">for</code>-loop is used for iterating elements in an iterable object e.g. <code class="language-plaintext highlighter-rouge">vector</code>, <code class="language-plaintext highlighter-rouge">list</code>, or <code class="language-plaintext highlighter-rouge">expressions</code>. Syntax: <code class="language-plaintext highlighter-rouge">for(&lt;element&gt; in &lt;elements&gt;){&lt;sub_expr&gt;}</code>.</li>
+</ul>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="m">2</span><span class="p">,</span><span class="m">3</span><span class="p">,</span><span class="m">4</span><span class="p">,</span><span class="m">5</span><span class="p">)){</span><span class="w"> </span><span class="n">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">1</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">3</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">4</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">5</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vec</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="m">2</span><span class="p">,</span><span class="m">3</span><span class="p">,</span><span class="m">4</span><span class="p">,</span><span class="m">5</span><span class="p">)</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">vec</span><span class="p">){</span><span class="w"> </span><span class="n">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">1</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">3</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">4</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">5</span><span class="w">
+</span></code></pre></div></div>
+
+<ul>
+  <li>A <code class="language-plaintext highlighter-rouge">while</code>-loop is also used for iterating values, in some occasions it might be more convenient to use over <code class="language-plaintext highlighter-rouge">for</code>-loops. A programmer must be reminded to use <code class="language-plaintext highlighter-rouge">while</code>-loops should have a counter variable outside its <a href="https://bityl.co/6ox2">scope</a>, in our case, we declared <code class="language-plaintext highlighter-rouge">i</code> prior to our <code class="language-plaintext highlighter-rouge">while</code>. Syntax: <code class="language-plaintext highlighter-rouge">while(&lt;boolean_expr&gt;){&lt;sub_expr&gt;}</code></li>
+</ul>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">4</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="k">while</span><span class="p">(</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">){</span><span class="w">
+     </span><span class="n">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w">
+     </span><span class="n">i</span><span class="o">&lt;-</span><span class="n">i</span><span class="m">-1</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">4</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">3</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">1</span><span class="w">
+</span></code></pre></div></div>
+
+<ul>
+  <li>A <code class="language-plaintext highlighter-rouge">repeat</code> statement achieves the same effect with <code class="language-plaintext highlighter-rouge">while</code> and <code class="language-plaintext highlighter-rouge">for</code>. Syntax: <code class="language-plaintext highlighter-rouge">repeat{&lt;sub_expr&gt; &lt;stop_condition&gt;}</code>.</li>
+</ul>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">10</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="k">repeat</span><span class="p">{</span><span class="w">
+     </span><span class="n">print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w">
+     </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">x</span><span class="m">-1</span><span class="w">
+     </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="m">5</span><span class="p">){</span><span class="w">
+         </span><span class="k">break</span><span class="w">
+     </span><span class="p">}</span><span class="w">
+ </span><span class="p">}</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">10</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">9</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">8</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">7</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">6</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">5</span><span class="w">
+</span></code></pre></div></div>
+
+<p><strong>Break statements</strong></p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">next</code> - skip the iteration of the loop and proceeds with the next iteration.</li>
+  <li><code class="language-plaintext highlighter-rouge">break</code> - breaks out of the loop, which effectively terminates it.</li>
+</ul>
+
+<p>Let’s consider them in action.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">10</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="k">repeat</span><span class="p">{</span><span class="w">
+</span><span class="o">+</span><span class="w">     </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">6</span><span class="p">){</span><span class="k">next</span><span class="p">}</span><span class="w">
+</span><span class="o">+</span><span class="w">     </span><span class="n">print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w">
+</span><span class="o">+</span><span class="w">     </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">x</span><span class="m">-1</span><span class="w">
+</span><span class="o">+</span><span class="w">     
+</span><span class="o">+</span><span class="w">     </span><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="m">5</span><span class="p">){</span><span class="k">break</span><span class="p">}</span><span class="w">
+</span><span class="o">+</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">10</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">9</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">8</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">7</span><span class="w">
+</span></code></pre></div></div>
+
+<hr />
+<h2 id="constructing-user-defined-functions-in-r">Constructing user-defined functions in R</h2>
+
+<ul>
+  <li>
+    <p>To find out about built-in functions use <code class="language-plaintext highlighter-rouge">help(&lt;function_name&gt;)</code>, <code class="language-plaintext highlighter-rouge">?&lt;function_name&gt;</code>, or <code class="language-plaintext highlighter-rouge">example(&lt;function_name&gt;)</code> command</p>
+  </li>
+  <li>
+    <p>Syntax for creating your own function <code class="language-plaintext highlighter-rouge">&lt;f_name&gt; &lt;- function(&lt;params&gt;){&lt;body&gt;}</code></p>
+  </li>
+</ul>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;</span><span class="w"> </span><span class="n">f</span><span class="o">&lt;-</span><span class="k">function</span><span class="p">(</span><span class="n">x</span><span class="p">){</span><span class="n">print</span><span class="p">(</span><span class="n">x</span><span class="o">^</span><span class="m">2</span><span class="p">)}</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">f</span><span class="p">(</span><span class="m">9</span><span class="p">)</span><span class="w">
+</span><span class="p">[</span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="m">81</span><span class="w">
+</span></code></pre></div></div>
+
+<hr />
+<h2 id="installing-and-importing-packages">Installing and Importing Packages</h2>
+
+<p>To install an R package:</p>
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">intall.packages</span><span class="p">(</span><span class="s2">"⟨package_name⟩"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+<p>To import package:</p>
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="err">⟨</span><span class="n">package_name</span><span class="err">⟩</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<hr />
+<h1 id="time-to-start-hacking-in-r">Time to start hacking in R!</h1>
+
+<iframe height="600px" width="100%" src="https://replit.com/@dcode2021/QuickStart?lite=true" scrolling="no" frameborder="no" allowtransparency="true" allowfullscreen="true" sandbox="allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-modals"></iframe>
+
+<hr />
+<h2 id="links-to-explore-further-on-r">Links to explore further on R</h2>
+<ul>
+  <li><a href="http://www.r-tutor.com/">R-Tutor</a></li>
+  <li><a href="https://www.tutorialspoint.com/r">TutorialsPoint in R</a></li>
+  <li><a href="https://bityl.co/6oyY">Hackerrank</a></li>
+</ul>
+
+<hr />
+<h4 id="download-r-here">Download R here:</h4>
+<ul>
+  <li><a href="https://cran.stat.upd.edu.ph/?fbclid=IwAR0UpY71fuBijsWgZYbNswfr_unS3Jb_TmqJDCSBI-jUvEKzlRZImOubZ8g">CRAN distribution</a></li>
+  <li><a href="https://bityl.co/6p6G">RStudio for IDE</a></li>
+</ul>
+
+<hr />
+<h2 id="references">References</h2>
+
+<ol>
+  <li>Morandat, F., Hill, B., Osvald, L., Vitek, J. (2012). Evaluating the design of the R language: Objects and Functions for Data Analysis (PDF). ECOOP’12 Proceedings of the 26th European Conference on Object-Oriented Programming.</li>
+  <li>Gentleman, Robert (9 December 2006). Individual Expertise profile of Robert Gentleman.</li>
+  <li>Geyer, C.J. (2021). <a href="https://bityl.co/6lhc">Stat 8054 Lecture Notes: R as a Functional Programming Language</a></li>
+  <li>Wickham, H. (2019). Advanced R. CRC Press.</li>
+  <li>R Core Team (2018). An Introduction to R.</li>
+  <li>Stirrup, J., &amp; Ramos, R. O. (2017). Advanced analytics with R and Tableau: Advanced analytics using data classification, unsupervised learning and data visualization.</li>
+  <li>Cady, F. (2017). The data science handbook. John Wiley &amp; Sons.</li>
+  <li>Yau, C. (n.d.). R Tutorial: An Introduction to Statistics. http://www.r-tutor.com/.</li>
+</ol>
+
+
+  </div><a class="u-url" href="/https://adeeconometrics.github.io/dcode_blogs/misc/2021/05/13/The-R-Language-An-Overview.html" hidden></a>
+</article>
+    </div>
+  </main><footer class="site-footer h-card">
+  <data class="u-url" href="/https://adeeconometrics.github.io/dcode_blogs/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/https://adeeconometrics.github.io/dcode_blogs/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Dave Amiana</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>Here is a documentation of my journey in Computer Science. 
+</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/https%3A%2F%2Fgithub.com%2Fadeeconometrics" title="https://github.com/adeeconometrics"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://www.linkedin.com/in/https%3A%2F%2Fwww.linkedin.com%2Fin%2Fdave-amiana-8548a91aa%2F" title="https://www.linkedin.com/in/dave-amiana-8548a91aa/"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#linkedin"></use></svg></a></li><li><a rel="me" href="https://twitter.com/https%3A%2F%2Ftwitter.com%2Fiamdeb25" title="https://twitter.com/iamdeb25"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#twitter"></use></svg></a></li><li><a href="https://dev.to/https%3A%2F%2Fdev.to%2Fiamdeb25" title="https://dev.to/iamdeb25"><svg class="svg-icon grey"><use xlink:href="/https://adeeconometrics.github.io/dcode_blogs/assets/minima-social-icons.svg#devto"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
