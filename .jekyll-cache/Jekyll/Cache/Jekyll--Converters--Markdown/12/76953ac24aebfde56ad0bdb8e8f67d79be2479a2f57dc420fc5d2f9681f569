@@ -1,0 +1,48 @@
+I"B<blockquote>
+  <p>back to basics</p>
+</blockquote>
+
+<p>A function is an essential construct in programming. In the language that we use to convey a message on the computer, functions closely resemble a verb: <em>“the nuts and bolts of the language”</em> (S. Pinker, 2007). Put it in another way, functions serve as the primary constructs for expressing a set computational procedure in a programming language.</p>
+
+<hr />
+
+<p>It is better to break down the problem into manageable pieces. Solving the smaller part of the problem requires a computational procedure that we store in a function.</p>
+
+<p>This article will introduce the things to consider in designing and organizing functions.</p>
+
+<p>A function is a block of code that processes inputs and configures an output. One of the nice things about this is it breaks down our solution into a set of subroutines that we can reuse to solve other problems.</p>
+
+<p>Indeed, simple algorithms can be stored in one function, sometimes, it branches off into two or more: <strong>the question is when and why do we need indirection?</strong> The most obvious reason for this is <em>code-reusability</em>. We need to make conscious efforts into making our codebase sustainable i.e. reusable. To achieve this, we have to delegate the simplest version of a task in a function. Our goal is to minimize the <em>boilerplate code</em> (sections of code that are repeated in multiple places with little to no variation), <strong>we follow the virtue of not repeating ourselves</strong>.</p>
+
+<p>Functions are sufficient for developing sophisticated software systems. This technique is sometimes known as <em>modular programming</em>. This is one of the reasons why C is deemed elegant by some developers I know.</p>
+
+<p>There are three major concepts in modular programming:</p>
+<ul>
+  <li><em>Module</em> - a self-contained collection of functions that solves a problem (or subproblem).</li>
+  <li><em>Abstract Step</em> - A step in which some implementation details are unspecified. This step may define the routes where concrete functions may take place. In other words, it is a code block that delegates a group of functions necessary for solving the problem.</li>
+  <li><em>Concrete Step</em> - A realization of the abstract step that implements the logic for solving independent subproblems.</li>
+</ul>
+
+<hr />
+<h2 id="software-design-process-top-down-approach">Software Design Process: Top-Down Approach</h2>
+
+<p><img src="https://cdn.hashnode.com/res/hashnode/image/upload/v1623724225735/nkFCw94Pc.png" alt="image.png" />
+<code class="language-plaintext highlighter-rouge">Figure 1.0</code>. Hierarchical solution tree (Dale, N. B., &amp; Weems, C., 2014).</p>
+
+<p>Steps for applying design principles in functions:</p>
+<ol>
+  <li><strong>Understand the problem</strong>. State its input requirements as well as the specifications for expected output.</li>
+  <li><strong>Write the major steps for solving the problem</strong>. Make a hierarchical solution tree (as seen in figure 1) and define the major problems you need to solve. As you go down to the bottom, problems become more concrete and simpler.</li>
+  <li><strong>Decide if the problem can be broken down into independent subproblems that we can work on separately</strong>. It is often simple enough when you can see how to implement it directly in a language. If you feel overwhelmed by writing it in a language, you are probably bypassing one or more levels of abstraction – you need to step back and think through how you can simplify this by breaking down the problem.</li>
+  <li><strong>Ensure that each function has exactly one job</strong>. Their purpose should be obvious in its name (it makes your code easier to read and self-documenting, so we must assure that the function name should clearly state its purpose).</li>
+  <li><strong>Document solution process</strong>. Documentation helps to make our codebase easier to maintain.</li>
+</ol>
+
+<hr />
+<h2 id="references">References:</h2>
+<ol>
+  <li>Pinker, S. (2007). Steven Pinker: What our language habits reveal.  <a href="https://www.youtube.com/watch?v=LjQM8PzCEY0">TED</a>.</li>
+  <li>Dale, N. B., &amp; Weems, C. (2014). Programming and problem solving with C++. Jones &amp; Bartlett Publishers.</li>
+  <li>DeNero, J. (n.d.).  <a href="https://composingprograms.com/pages/14-designing-functions.html">Composing Programs</a>.</li>
+</ol>
+:ET

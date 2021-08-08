@@ -1,0 +1,2 @@
+I"‡<p>At first, it seems that C++ makes things more complicated by introducing yet another layer of abstraction. References seem to encapsulate the same set of functionalities as pointers. Both of these constructs are used to <em>refer</em> to another entity as they provide access points into manipulating the contents of the <em>referent</em> entity; they are both allocated on the heap.</p>
+:ET
