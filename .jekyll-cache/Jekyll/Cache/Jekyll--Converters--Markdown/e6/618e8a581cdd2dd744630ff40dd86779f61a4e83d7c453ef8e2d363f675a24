@@ -1,52 +1,4 @@
-<!DOCTYPE html>
-<html lang=" en"><head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
-<title>Explorations in Computer Science | Where I blog about Computer Science</title>
-<meta name="generator" content="Jekyll v4.2.0" />
-<meta property="og:title" content="Explorations in Computer Science" />
-<meta name="author" content="Dave Amiana" />
-<meta property="og:locale" content="en_US" />
-<meta name="description" content="Where I blog about Computer Science" />
-<meta property="og:description" content="Where I blog about Computer Science" />
-<meta property="og:site_name" content="Explorations in Computer Science" />
-<meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="Explorations in Computer Science" />
-<script type="application/ld+json">
-{"@type":"WebSite","url":"/","headline":"Explorations in Computer Science","author":{"@type":"Person","name":"Dave Amiana"},"description":"Where I blog about Computer Science","name":"Explorations in Computer Science","@context":"https://schema.org"}</script>
-<!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Explorations in Computer Science" />
-</head>
-<body><header class="site-header">
-
-  <div class="wrapper"><a class="site-title" rel="author" href="/%20/">Explorations in Computer Science</a><nav class="site-nav">
-      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
-      <label for="nav-trigger">
-        <span class="menu-icon">
-          <svg viewBox="0 0 18 15" width="18px" height="15px">
-            <path
-              d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z" />
-          </svg>
-        </span>
-      </label>
-
-      <div class="trigger"><a class="page-link" href="/about/">About my Blogs</a></div>
-    </nav>
-  </div>
-</header><main class="page-content" aria-label="Content">
-    <div class="wrapper">
-      <div class="home">
-
-
-
-  <ul class="post-list"><li>
-        <span class="post-meta">Aug 12, 2021</span>
-        <h3>
-          <a class="post-link" href="/misc/2021/08/12/On-Pointer-Types.html">
-            On Pointer Types: Peeking at Reference Semantics
-          </a>
-        </h3><p>In this article, I aim to introduce the concept and motivation behind using pointers. There are breeds of C++ developers that only use smart pointers for safety reasons, others that only use raw pointers for performance benefits, and some that use both whenever they provide the utmost benefits. In this article, I aim to highlight the use-cases of pointers so you can decide when to use one.</p>
+I"�K<p>In this article, I aim to introduce the concept and motivation behind using pointers. There are breeds of C++ developers that only use smart pointers for safety reasons, others that only use raw pointers for performance benefits, and some that use both whenever they provide the utmost benefits. In this article, I aim to highlight the use-cases of pointers so you can decide when to use one.</p>
 
 <hr />
 <p>Conceptually, a pointer is a kind of reference. That is, a pointer refers to a certain block of memory of which acts as an entry point. To access the contents or modify the value of a pointer, we <em>dereference</em> it. Many languages have pointer-like features. Our concern revolves around the context of C and C++. Note that all C functions are valid in C++ but the opposite is not true. For this reason, our section on smart pointers is only applicable to C++.</p>
@@ -216,7 +168,7 @@ Resources of Entity is cleaned up.
 <p>When I first encountered this, I thought that is all I need, unique pointers and shared pointers are all there is to it. Until I encountered this problem called <strong>circular references</strong> where the troubles of shared references kick in. It is possible to break the guarantees of the shared pointer by forming a loop of circular references which results in resource leaks.</p>
 
 <h4 id="the-circular-reference-problem">The Circular Reference Problem</h4>
-<p>A circular reference has the form $A \to B$, $B\to A$. Let us put this into code.</p>
+<p>A circular reference has the form \( A \to B, B\to A\). Let us put this into code.</p>
 
 <pre><code class="language-C++">struct B;
 
@@ -245,7 +197,7 @@ int main(){
 <pre><code class="language-Bash">Resources of A are acquired.
 Resources of B are acquired.
 </code></pre>
-<p>Since $A \to B$ and $B \to A$, the reference count will never resolve to zero – the condition which <code class="language-plaintext highlighter-rouge">std::shared_ptr&lt;T&gt;</code> does its clean-up. We can observe the reference counts by the<code class="language-plaintext highlighter-rouge">use_count()</code> function. Let is modify the main function:</p>
+<p>Since \(A \to B\) and \(B \to A\), the reference count will never resolve to zero – the condition which <code class="language-plaintext highlighter-rouge">std::shared_ptr&lt;T&gt;</code> does its clean-up. We can observe the reference counts by the<code class="language-plaintext highlighter-rouge">use_count()</code> function. Let is modify the main function:</p>
 <pre><code class="language-C++">int main(){
     std::shared_ptr&lt;A&gt; sa (new A());
     std::shared_ptr&lt;B&gt; sb (new B());
@@ -329,81 +281,4 @@ Resources of B are cleaned up.
   <li>Stroustrup, B. (2013). The C++ programming language. Pearson Education.</li>
 </ol>
 
-</li><li>
-        <span class="post-meta">Aug 4, 2021</span>
-        <h3>
-          <a class="post-link" href="/misc/2021/08/04/Pointers-and-References-Design-Goals-and-Use-Cases.html">
-            Pointers and References: Design Goals and Use Cases
-          </a>
-        </h3><p>At first, it seems that C++ makes things more complicated by introducing yet another layer of abstraction. References seem to encapsulate the same set of functionalities as pointers. Both of these constructs are used to <em>refer</em> to another entity as they provide access points into manipulating the contents of the <em>referent</em> entity; they are both allocated on the heap.</p>
-</li><li>
-        <span class="post-meta">Jun 15, 2021</span>
-        <h3>
-          <a class="post-link" href="/misc/2021/06/15/Designing-Functions.html">
-            Designing functions: The building blocks of Computer Programs
-          </a>
-        </h3><blockquote>
-  <p>back to basics</p>
-</blockquote>
-</li><li>
-        <span class="post-meta">May 20, 2021</span>
-        <h3>
-          <a class="post-link" href="/misc/2021/05/20/Elements-of-Programming.html">
-            Elements of Programming: Fundamental Data Structures
-          </a>
-        </h3><p>There are two general ways of looking at data structures: concept and implementation. Ideally, they should serve you the sense in selecting an effective data structure for a given problem. Fundamental data structures manifest themselves naturally in most situations. The problem usually demands a certain data structure, while others could be represented in different ways. An effective data structure should simplify the problem. But that is only half of the story since a data structure must also ensure computational efficiency. We can simplify the problem by conceptually looking for an apt data structure while performance benefits are obtained by looking into the implementation.</p>
-</li><li>
-        <span class="post-meta">May 13, 2021</span>
-        <h3>
-          <a class="post-link" href="/misc/2021/05/13/The-R-Language-An-Overview.html">
-            The R Language: An Overview
-          </a>
-        </h3><p>R is a functional programming language that took inspiration from Scheme [1]. It was made by statisticians Ross Ihaka, and Robert Gentlemen [2] as they began to seek an alternative implementation of the <a href="https://bityl.co/6lIe">S language</a>. The name of <strong>R</strong> came from the names of its core developer, Robert, and Ross.</p>
-</li><li>
-        <span class="post-meta">Apr 18, 2021</span>
-        <h3>
-          <a class="post-link" href="/misc/2021/04/18/Recursion-is-Recursion.html">
-            Recursion is Recursion!
-          </a>
-        </h3><blockquote>
-  <p>Let’s talk about one of the cornerstones of Computer Science</p>
-</blockquote>
-</li></ul>
-
-    </div>
-
-    </div>
-  </main><footer class="site-footer h-card">
-  <data class="u-url" href="/"></data>
-
-  <div class="wrapper">
-
-    <div class="footer-col-wrapper">
-      <div class="footer-col">
-        <p class="feed-subscribe">
-          <a href="/feed.xml">
-            <svg class="svg-icon orange">
-              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
-            </svg><span>Subscribe</span>
-          </a>
-        </p>
-        <ul class="contact-list">
-          <li class="p-name">Dave Amiana</li>
-          <li><a class="u-email" href="mailto:amiana.dave@gmail.com">amiana.dave@gmail.com</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <p>Where I blog about Computer Science
-</p>
-      </div>
-    </div>
-
-    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/adeeconometrics" title="adeeconometrics"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/iamdeb25" title="iamdeb25"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg></a></li><li><a href="https://dev.to/iamdeb25" title="iamdeb25"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#devto"></use></svg></a></li></ul>
-</div>
-
-  </div>
-
-</footer>
-</body>
-
-</html>
+:ET

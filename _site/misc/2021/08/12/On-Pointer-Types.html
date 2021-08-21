@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang=" en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>On Pointer Types: Peeking at Reference Semantics | Explorations in Computer Science</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="On Pointer Types: Peeking at Reference Semantics" />
+<meta name="author" content="Dave Amiana" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In this article, I aim to introduce the concept and motivation behind using pointers. There are breeds of C++ developers that only use smart pointers for safety reasons, others that only use raw pointers for performance benefits, and some that use both whenever they provide the utmost benefits. In this article, I aim to highlight the use-cases of pointers so you can decide when to use one. Conceptually, a pointer is a kind of reference. That is, a pointer refers to a certain block of memory of which acts as an entry point. To access the contents or modify the value of a pointer, we dereference it. Many languages have pointer-like features. Our concern revolves around the context of C and C++. Note that all C functions are valid in C++ but the opposite is not true. For this reason, our section on smart pointers is only applicable to C++. Pointers are the basic structure to achieve reference semantics. Pointers are handy for naming another entity to be attributed by the contents of the referent entity. A pointer may access and manipulate the contents of the entity that it is pointed to, consider: int x = 5; int *y = &amp;x; *y = 10; Pointers are introduced in C for the following reasons: Inexpensive parameter passing. Allocate memory for new objects on the heap. Passing a function reference to a function. Iterate over data structures. The same thing is true in C++. In fact, iterators (a component for iterating over C++ Containers) resemble the interface of a pointer. But C++ has more to offer with a different set of modalities one can express reference semantics. We will focus on the set of reference modalities known as smart pointers. But before that, let us present a compelling reason for using smart pointers by enumerating the problems of raw pointers. Raw Pointers Raw pointers are low-level types that pertain to a certain block of memory. As mentioned, pointers are entry points to access a value or modify it in a specific location in memory. Some languages have restrictions on pointer types to a varying degree. For example, Ada initializes a default value of their pointer types to null and makes a restriction for type conversions involving pointers mostly for type safety. While languages like Java have banned the use of low-level pointer types to reduce programming error. Therein creeps in the subtle shades of pointers. Now we ask what is the scene of pointer types in C? In languages like C and C++, pointer types are very much used for low-level programming. Type conversion of pointer types has a varying degree of restrictions. In C, void * types are considered as raw pointer types which can be morphed into any type by an operation called typecasting. void* function(int&amp; i){return &amp;i; } int main(){ int i = 10; std::cout &lt;&lt; *((int*)function(i)); } The above snippet demonstrates that a void * type can be cast into an int *, or any type in that regard. Albeit not apparent with the above example, this is useful for abstraction which is a matter that we will not talk about here. Raw pointers are concrete implementation of the more abstract concept of reference. Unlike Ada, raw pointers in C/C++ are not initialized in a null value, although they can refer to null which is a safer way of using raw pointers: if not initialized with the address of a referent, initialize it with nullptr (in C++) and NULL (in C). The reason behind this is to achieve well-defined behavior and avoid bugs that can be very difficult to fix, let alone find. Raw pointers will not impose anything so misusing or abusing it are very easy to commit. The Dangling Problem: Let us consider an instance that we are likely to encounter the dangling pointer problem. Let’s take a look at allocating and deallocating resources using new and delete function in C++ and malloc (calloc) or free in C. int main(){ // (int*)malloc(sizeof(int)) or (int*)calloc(1, sizeof(int)) in C int* i = new int(100); std::cout &lt;&lt;&quot;contends of i: &quot;&lt;&lt; *i &lt;&lt; &#39;\n&#39;; std::cout &lt;&lt;&quot;address of i: &quot; &lt;&lt; &amp;i &lt;&lt; &#39;\n&#39;; // free(i) in C delete i; std::cout &lt;&lt;&quot;contents of i: &quot; &lt;&lt;*i &lt;&lt; &#39;\n&#39;; std::cout &lt;&lt;&quot;address of i: &quot; &lt;&lt; &amp;i &lt;&lt; &#39;\n&#39;; } Note that delete or free functions only removes the contents of an entity, in this case, i. That is, dereferencing i still returns the memory location of i before it was deleted. This is problematic for it may introduce undefined behavior: dereferencing to an already freed memory is dangerous. To resolve this, we have to make sure that the i references to a well-defined location in memory hence we put i = nullptr (in C++) and i = NULL (in C) after deleting the contents of i to avoid critical mistakes. int main(){ int* i = new int(100); std::cout &lt;&lt;&quot;contends of i: &quot;&lt;&lt; *i &lt;&lt; &#39;\n&#39;; std::cout &lt;&lt;&quot;address of i: &quot; &lt;&lt; &amp;i &lt;&lt; &#39;\n&#39;; delete i; i = nullptr; std::cout &lt;&lt;&quot;contents of i: &quot; &lt;&lt;*i &lt;&lt; &#39;\n&#39;; std::cout &lt;&lt;&quot;address of i: &quot; &lt;&lt; &amp;i &lt;&lt; &#39;\n&#39;; } Another problem comes with determining the owning pointer which can result in serious issues from resource leaks, undefined behaviors to security vulnerabilities. Which pointer is responsible for which entity? It is difficult to keep track of multiple references and make sure that at the end of the scope such references are correctly managed. There has to be a clear expression to determine the owning pointer. Because of this, C++ introduced a reference management system that revolves around the idea of RAII. Smart Pointers From the C++ Standard : Enforcing the lifetime safety profile eliminates leaks. When combined with resource safety provided by RAII, it eliminates the need for “garbage collection” (by generating no garbage). Combine this with enforcement of the type and bounds profiles and you get complete type- and resource-safety, guaranteed by tools. C++ introduced a set of classes for automatic resource management with very minimal to zero-cost performance penalties. Using these set of pointers has the following set of benefits: clarity of expressing ownership guarantees that resources will not leak When appropriate, we should be using smart pointers for clearly expressing our intent with the kind of ownership we want to establish between the pointer and the entity it refers to. We have three smart pointers: std::unique_ptr&lt;T&gt;, std::shared_ptr&lt;T&gt;, and std::weak_ptr&lt;T&gt;. We can access these modalities in the &lt;memory&gt; header file. Let us walk through and discover what these reference modalities have to offer. For our demonstration let us consider a class named Entity defined as: class Entity{ const char* str = &quot;message from Entity. \n&quot;; public: Entity(){ std::cout &lt;&lt; &quot;Resources of Entity are acquired. \n&quot;; } ~Entity(){ std::cout &lt;&lt; &quot;Resources of Entity is cleaned up. \n&quot;; } const char* function(void){ return str; } }; Unique Pointer Unique pointer maintains that there is only one pointer responsible for a given resource in memory. The owning pointer is responsible for the clean-up and resource management. Let us define an instance of Entity. std::unique_ptr&lt;E&gt; e (new Entity()); Now, let us consider passing the pointer by reference and with move constructors to see its effect on where Entity is destroyed. Passing the unique pointer by reference means that the unique pointer is extended to a function, hence the clean-up happens after the unique pointer goes out of scope from the main function where it has been declared. void f(std::unique_ptr&lt;Entity&gt;&amp; entity){ std::cout &lt;&lt; entity-&gt;function(); } int main(){ std::unique_ptr&lt;Entity&gt; e(new Entity()); f(e); std::cout &lt;&lt; &quot;... \n&quot;; } Resources of Entity are acquired. message from Entity. ... Resources of Entity is cleaned up. Passing the unique pointer with move constructors is transferring ownership to the unique pointer defined in function f(). We can notice the behavior has we run the following snippet: void f(std::unique_ptr&lt;Entity&gt; entity){ std::cout &lt;&lt; entity-&gt;function(); } int main(){ std::unique_ptr&lt;Entity&gt; e(new Entity()); f(std::move(e)); std::cout &lt;&lt; &quot;... \n&quot;; } Resources of Entity are acquired. message from Entity. Resources of Entity is cleaned up. ... Since we transferred the ownership of e to entity, the clean-up happened as soon as the entity exits the function. Shared Pointer The shared pointer has an additional mechanism called reference counting where it keeps track of pointers that request for sharing resources. Each time another pointer asks for shared resources, the reference counter adds one and for every time it goes out of scope it removes one. At the time where the reference count is 0, it calls for the clean-up. We can observe this mechanism with the following code snippet: void f(std::shared_ptr&lt;Entity&gt; entity){ std::cout&lt;&lt;&quot;ref count: &quot; &lt;&lt; entity.use_count() &lt;&lt; &#39;\n&#39;; std::cout &lt;&lt; entity-&gt;function(); } int main(){ std::shared_ptr&lt;Entity&gt; e(new Entity()); std::cout&lt;&lt;&quot;ref count: &quot; &lt;&lt; e.use_count() &lt;&lt; &#39;\n&#39;; f(e); std::cout &lt;&lt; &quot;f went out of scope. \n&quot;; std::cout &lt;&lt;&quot;ref count: &quot; &lt;&lt;e.use_count() &lt;&lt; &#39;\n&#39;; std::cout &lt;&lt; &quot;... \n&quot;; } Resources of Entity are acquired. ref count: 1 ref count: 2 message from Entity. f went out of scope. ref count: 1 ... Resources of Entity is cleaned up. When I first encountered this, I thought that is all I need, unique pointers and shared pointers are all there is to it. Until I encountered this problem called circular references where the troubles of shared references kick in. It is possible to break the guarantees of the shared pointer by forming a loop of circular references which results in resource leaks. The Circular Reference Problem A circular reference has the form $A \to B$, $B\to A$. Let us put this into code. struct B; struct A{ std::shared_ptr&lt;B&gt; ab; A(){ std::cout &lt;&lt; &quot;Resources of A are acquired. \n&quot;; } ~A(){ std::cout &lt;&lt; &quot;Resources of A are cleaned up. \n&quot;; } }; struct B{ std::shared_ptr&lt;A&gt; ba; B(){ std::cout &lt;&lt; &quot;Resources of B are acquired. \n&quot;; } ~B(){ std::cout &lt;&lt; &quot;Resources of B are cleaned up. \n&quot;; } }; int main(){ std::shared_ptr&lt;A&gt; sa (new A()); std::shared_ptr&lt;B&gt; sb (new B()); sa-&gt;ab=sb; sb-&gt;ba=sa; } Resources of A are acquired. Resources of B are acquired. Since $A \to B$ and $B \to A$, the reference count will never resolve to zero – the condition which std::shared_ptr&lt;T&gt; does its clean-up. We can observe the reference counts by theuse_count() function. Let is modify the main function: int main(){ std::shared_ptr&lt;A&gt; sa (new A()); std::shared_ptr&lt;B&gt; sb (new B()); sa-&gt;ab=sb; std::cout &lt;&lt; &quot;count of ab: &quot; &lt;&lt; sa-&gt;ab.use_count() &lt;&lt; &#39;\n&#39;; sb-&gt;ba=sa; std::cout &lt;&lt; &quot;count of ba: &quot; &lt;&lt; sb-&gt;ba.use_count() &lt;&lt; &#39;\n&#39;; } Resources of A are acquired. Resources of B are acquired. count of ab: 2 count of ba: 2 How do we break the curse? Introducing Weak Pointers. Weak Pointer A weak pointer is a special type of pointer in conjunction with shared pointers. With weak pointers, you can access the contents of the shared pointer without increasing the reference count. This is useful for observing the contents of a shared resource and most notably resolving the problem of circular reference. Let us solve the problem of circular reference through weak pointers. This can be achieved by modifying either A::ab or B::ba pointers. struct A{ std::shared_ptr&lt;B&gt; ab; A(){ std::cout &lt;&lt; &quot;Resources of A are acquired. \n&quot;; } ~A(){ std::cout &lt;&lt; &quot;Resources of A are cleaned up. \n&quot;; } }; struct B{ std::weak_ptr&lt;A&gt; ba; B(){ std::cout &lt;&lt; &quot;Resources of B are acquired. \n&quot;; } ~B(){ std::cout &lt;&lt; &quot;Resources of B are cleaned up. \n&quot;; } }; int main(){ std::shared_ptr&lt;A&gt; sa (new A()); std::shared_ptr&lt;B&gt; sb (new B()); sa-&gt;ab=sb; std::cout &lt;&lt; &quot;count of ab: &quot; &lt;&lt; sa-&gt;ab.use_count() &lt;&lt; &#39;\n&#39;; sb-&gt;ba=sa; std::cout &lt;&lt; &quot;count of ba: &quot; &lt;&lt; sb-&gt;ba.use_count() &lt;&lt; &#39;\n&#39;; } Resources of A are acquired. Resources of B are acquired. count of ab: 2 count of ba: 1 Resources of A are cleaned up. Resources of B are cleaned up. Summary C++ does not use automatic reference management by default following their design philosophy of the zero-overhead principle. One can enable automatic reference management in C++ by making use of smart pointers defined in the standard library. It gives you resource guarantees and safety. Other languages such as Swift and Rust have adhered to the same concept instead of making sophisticated garbage collectors, they do not produce any garbage at all. This memory management model makes a very compelling case of using smart pointers. But raw pointers still have their brightest moments up to date. Prefer using pointers for performance-critical loops or when the scope is clear enough to determine which is the owning pointer for a given resource. Raw pointers give you few performance benefits, but it comes with the cost of manually keeping track of your pointers, resource safety becomes your responsibility. Prefer using smart pointers for expressing ownership clearly. Smart pointers give you resource guarantees which get rid of your task to make sure that there will be no leaks. The standard recommends the following: Look at pointers: Classify them into non-owners (the default) and owners. Where feasible, replace owners with standard-library resource handles (as in the example above). Alternatively, mark an owner as such using owner from the GSL. Look for naked new and delete Look for known resource allocating functions returning raw pointers (such as fopen, malloc, and strdup) References Barnes, J. (2005). Safe Pointers. AdaCore. Retrieved from: https://www.adacore.com/uploads_gems/03_safe_secure_ada_2005_safe_pointers.pdf. Computerphile (2017). Why C is so Influential? Retrieved from: https://www.youtube.com/watch?v=ci1PJexnfNE. Microsoft Docs (2020). Raw Pointers (C++). Microsoft Docs (2020). Smart Pointers (Modern C++). Microsoft Docs (2019). Object lifetime and resource management (RAII). Stroustrup, B. &amp; Sutter, H. (2021). C++ Core Guidelines. Retrieved from: http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#??? Stroustrup, B. (2013). The C++ programming language. Pearson Education." />
+<meta property="og:description" content="In this article, I aim to introduce the concept and motivation behind using pointers. There are breeds of C++ developers that only use smart pointers for safety reasons, others that only use raw pointers for performance benefits, and some that use both whenever they provide the utmost benefits. In this article, I aim to highlight the use-cases of pointers so you can decide when to use one. Conceptually, a pointer is a kind of reference. That is, a pointer refers to a certain block of memory of which acts as an entry point. To access the contents or modify the value of a pointer, we dereference it. Many languages have pointer-like features. Our concern revolves around the context of C and C++. Note that all C functions are valid in C++ but the opposite is not true. For this reason, our section on smart pointers is only applicable to C++. Pointers are the basic structure to achieve reference semantics. Pointers are handy for naming another entity to be attributed by the contents of the referent entity. A pointer may access and manipulate the contents of the entity that it is pointed to, consider: int x = 5; int *y = &amp;x; *y = 10; Pointers are introduced in C for the following reasons: Inexpensive parameter passing. Allocate memory for new objects on the heap. Passing a function reference to a function. Iterate over data structures. The same thing is true in C++. In fact, iterators (a component for iterating over C++ Containers) resemble the interface of a pointer. But C++ has more to offer with a different set of modalities one can express reference semantics. We will focus on the set of reference modalities known as smart pointers. But before that, let us present a compelling reason for using smart pointers by enumerating the problems of raw pointers. Raw Pointers Raw pointers are low-level types that pertain to a certain block of memory. As mentioned, pointers are entry points to access a value or modify it in a specific location in memory. Some languages have restrictions on pointer types to a varying degree. For example, Ada initializes a default value of their pointer types to null and makes a restriction for type conversions involving pointers mostly for type safety. While languages like Java have banned the use of low-level pointer types to reduce programming error. Therein creeps in the subtle shades of pointers. Now we ask what is the scene of pointer types in C? In languages like C and C++, pointer types are very much used for low-level programming. Type conversion of pointer types has a varying degree of restrictions. In C, void * types are considered as raw pointer types which can be morphed into any type by an operation called typecasting. void* function(int&amp; i){return &amp;i; } int main(){ int i = 10; std::cout &lt;&lt; *((int*)function(i)); } The above snippet demonstrates that a void * type can be cast into an int *, or any type in that regard. Albeit not apparent with the above example, this is useful for abstraction which is a matter that we will not talk about here. Raw pointers are concrete implementation of the more abstract concept of reference. Unlike Ada, raw pointers in C/C++ are not initialized in a null value, although they can refer to null which is a safer way of using raw pointers: if not initialized with the address of a referent, initialize it with nullptr (in C++) and NULL (in C). The reason behind this is to achieve well-defined behavior and avoid bugs that can be very difficult to fix, let alone find. Raw pointers will not impose anything so misusing or abusing it are very easy to commit. The Dangling Problem: Let us consider an instance that we are likely to encounter the dangling pointer problem. Let’s take a look at allocating and deallocating resources using new and delete function in C++ and malloc (calloc) or free in C. int main(){ // (int*)malloc(sizeof(int)) or (int*)calloc(1, sizeof(int)) in C int* i = new int(100); std::cout &lt;&lt;&quot;contends of i: &quot;&lt;&lt; *i &lt;&lt; &#39;\n&#39;; std::cout &lt;&lt;&quot;address of i: &quot; &lt;&lt; &amp;i &lt;&lt; &#39;\n&#39;; // free(i) in C delete i; std::cout &lt;&lt;&quot;contents of i: &quot; &lt;&lt;*i &lt;&lt; &#39;\n&#39;; std::cout &lt;&lt;&quot;address of i: &quot; &lt;&lt; &amp;i &lt;&lt; &#39;\n&#39;; } Note that delete or free functions only removes the contents of an entity, in this case, i. That is, dereferencing i still returns the memory location of i before it was deleted. This is problematic for it may introduce undefined behavior: dereferencing to an already freed memory is dangerous. To resolve this, we have to make sure that the i references to a well-defined location in memory hence we put i = nullptr (in C++) and i = NULL (in C) after deleting the contents of i to avoid critical mistakes. int main(){ int* i = new int(100); std::cout &lt;&lt;&quot;contends of i: &quot;&lt;&lt; *i &lt;&lt; &#39;\n&#39;; std::cout &lt;&lt;&quot;address of i: &quot; &lt;&lt; &amp;i &lt;&lt; &#39;\n&#39;; delete i; i = nullptr; std::cout &lt;&lt;&quot;contents of i: &quot; &lt;&lt;*i &lt;&lt; &#39;\n&#39;; std::cout &lt;&lt;&quot;address of i: &quot; &lt;&lt; &amp;i &lt;&lt; &#39;\n&#39;; } Another problem comes with determining the owning pointer which can result in serious issues from resource leaks, undefined behaviors to security vulnerabilities. Which pointer is responsible for which entity? It is difficult to keep track of multiple references and make sure that at the end of the scope such references are correctly managed. There has to be a clear expression to determine the owning pointer. Because of this, C++ introduced a reference management system that revolves around the idea of RAII. Smart Pointers From the C++ Standard : Enforcing the lifetime safety profile eliminates leaks. When combined with resource safety provided by RAII, it eliminates the need for “garbage collection” (by generating no garbage). Combine this with enforcement of the type and bounds profiles and you get complete type- and resource-safety, guaranteed by tools. C++ introduced a set of classes for automatic resource management with very minimal to zero-cost performance penalties. Using these set of pointers has the following set of benefits: clarity of expressing ownership guarantees that resources will not leak When appropriate, we should be using smart pointers for clearly expressing our intent with the kind of ownership we want to establish between the pointer and the entity it refers to. We have three smart pointers: std::unique_ptr&lt;T&gt;, std::shared_ptr&lt;T&gt;, and std::weak_ptr&lt;T&gt;. We can access these modalities in the &lt;memory&gt; header file. Let us walk through and discover what these reference modalities have to offer. For our demonstration let us consider a class named Entity defined as: class Entity{ const char* str = &quot;message from Entity. \n&quot;; public: Entity(){ std::cout &lt;&lt; &quot;Resources of Entity are acquired. \n&quot;; } ~Entity(){ std::cout &lt;&lt; &quot;Resources of Entity is cleaned up. \n&quot;; } const char* function(void){ return str; } }; Unique Pointer Unique pointer maintains that there is only one pointer responsible for a given resource in memory. The owning pointer is responsible for the clean-up and resource management. Let us define an instance of Entity. std::unique_ptr&lt;E&gt; e (new Entity()); Now, let us consider passing the pointer by reference and with move constructors to see its effect on where Entity is destroyed. Passing the unique pointer by reference means that the unique pointer is extended to a function, hence the clean-up happens after the unique pointer goes out of scope from the main function where it has been declared. void f(std::unique_ptr&lt;Entity&gt;&amp; entity){ std::cout &lt;&lt; entity-&gt;function(); } int main(){ std::unique_ptr&lt;Entity&gt; e(new Entity()); f(e); std::cout &lt;&lt; &quot;... \n&quot;; } Resources of Entity are acquired. message from Entity. ... Resources of Entity is cleaned up. Passing the unique pointer with move constructors is transferring ownership to the unique pointer defined in function f(). We can notice the behavior has we run the following snippet: void f(std::unique_ptr&lt;Entity&gt; entity){ std::cout &lt;&lt; entity-&gt;function(); } int main(){ std::unique_ptr&lt;Entity&gt; e(new Entity()); f(std::move(e)); std::cout &lt;&lt; &quot;... \n&quot;; } Resources of Entity are acquired. message from Entity. Resources of Entity is cleaned up. ... Since we transferred the ownership of e to entity, the clean-up happened as soon as the entity exits the function. Shared Pointer The shared pointer has an additional mechanism called reference counting where it keeps track of pointers that request for sharing resources. Each time another pointer asks for shared resources, the reference counter adds one and for every time it goes out of scope it removes one. At the time where the reference count is 0, it calls for the clean-up. We can observe this mechanism with the following code snippet: void f(std::shared_ptr&lt;Entity&gt; entity){ std::cout&lt;&lt;&quot;ref count: &quot; &lt;&lt; entity.use_count() &lt;&lt; &#39;\n&#39;; std::cout &lt;&lt; entity-&gt;function(); } int main(){ std::shared_ptr&lt;Entity&gt; e(new Entity()); std::cout&lt;&lt;&quot;ref count: &quot; &lt;&lt; e.use_count() &lt;&lt; &#39;\n&#39;; f(e); std::cout &lt;&lt; &quot;f went out of scope. \n&quot;; std::cout &lt;&lt;&quot;ref count: &quot; &lt;&lt;e.use_count() &lt;&lt; &#39;\n&#39;; std::cout &lt;&lt; &quot;... \n&quot;; } Resources of Entity are acquired. ref count: 1 ref count: 2 message from Entity. f went out of scope. ref count: 1 ... Resources of Entity is cleaned up. When I first encountered this, I thought that is all I need, unique pointers and shared pointers are all there is to it. Until I encountered this problem called circular references where the troubles of shared references kick in. It is possible to break the guarantees of the shared pointer by forming a loop of circular references which results in resource leaks. The Circular Reference Problem A circular reference has the form $A \to B$, $B\to A$. Let us put this into code. struct B; struct A{ std::shared_ptr&lt;B&gt; ab; A(){ std::cout &lt;&lt; &quot;Resources of A are acquired. \n&quot;; } ~A(){ std::cout &lt;&lt; &quot;Resources of A are cleaned up. \n&quot;; } }; struct B{ std::shared_ptr&lt;A&gt; ba; B(){ std::cout &lt;&lt; &quot;Resources of B are acquired. \n&quot;; } ~B(){ std::cout &lt;&lt; &quot;Resources of B are cleaned up. \n&quot;; } }; int main(){ std::shared_ptr&lt;A&gt; sa (new A()); std::shared_ptr&lt;B&gt; sb (new B()); sa-&gt;ab=sb; sb-&gt;ba=sa; } Resources of A are acquired. Resources of B are acquired. Since $A \to B$ and $B \to A$, the reference count will never resolve to zero – the condition which std::shared_ptr&lt;T&gt; does its clean-up. We can observe the reference counts by theuse_count() function. Let is modify the main function: int main(){ std::shared_ptr&lt;A&gt; sa (new A()); std::shared_ptr&lt;B&gt; sb (new B()); sa-&gt;ab=sb; std::cout &lt;&lt; &quot;count of ab: &quot; &lt;&lt; sa-&gt;ab.use_count() &lt;&lt; &#39;\n&#39;; sb-&gt;ba=sa; std::cout &lt;&lt; &quot;count of ba: &quot; &lt;&lt; sb-&gt;ba.use_count() &lt;&lt; &#39;\n&#39;; } Resources of A are acquired. Resources of B are acquired. count of ab: 2 count of ba: 2 How do we break the curse? Introducing Weak Pointers. Weak Pointer A weak pointer is a special type of pointer in conjunction with shared pointers. With weak pointers, you can access the contents of the shared pointer without increasing the reference count. This is useful for observing the contents of a shared resource and most notably resolving the problem of circular reference. Let us solve the problem of circular reference through weak pointers. This can be achieved by modifying either A::ab or B::ba pointers. struct A{ std::shared_ptr&lt;B&gt; ab; A(){ std::cout &lt;&lt; &quot;Resources of A are acquired. \n&quot;; } ~A(){ std::cout &lt;&lt; &quot;Resources of A are cleaned up. \n&quot;; } }; struct B{ std::weak_ptr&lt;A&gt; ba; B(){ std::cout &lt;&lt; &quot;Resources of B are acquired. \n&quot;; } ~B(){ std::cout &lt;&lt; &quot;Resources of B are cleaned up. \n&quot;; } }; int main(){ std::shared_ptr&lt;A&gt; sa (new A()); std::shared_ptr&lt;B&gt; sb (new B()); sa-&gt;ab=sb; std::cout &lt;&lt; &quot;count of ab: &quot; &lt;&lt; sa-&gt;ab.use_count() &lt;&lt; &#39;\n&#39;; sb-&gt;ba=sa; std::cout &lt;&lt; &quot;count of ba: &quot; &lt;&lt; sb-&gt;ba.use_count() &lt;&lt; &#39;\n&#39;; } Resources of A are acquired. Resources of B are acquired. count of ab: 2 count of ba: 1 Resources of A are cleaned up. Resources of B are cleaned up. Summary C++ does not use automatic reference management by default following their design philosophy of the zero-overhead principle. One can enable automatic reference management in C++ by making use of smart pointers defined in the standard library. It gives you resource guarantees and safety. Other languages such as Swift and Rust have adhered to the same concept instead of making sophisticated garbage collectors, they do not produce any garbage at all. This memory management model makes a very compelling case of using smart pointers. But raw pointers still have their brightest moments up to date. Prefer using pointers for performance-critical loops or when the scope is clear enough to determine which is the owning pointer for a given resource. Raw pointers give you few performance benefits, but it comes with the cost of manually keeping track of your pointers, resource safety becomes your responsibility. Prefer using smart pointers for expressing ownership clearly. Smart pointers give you resource guarantees which get rid of your task to make sure that there will be no leaks. The standard recommends the following: Look at pointers: Classify them into non-owners (the default) and owners. Where feasible, replace owners with standard-library resource handles (as in the example above). Alternatively, mark an owner as such using owner from the GSL. Look for naked new and delete Look for known resource allocating functions returning raw pointers (such as fopen, malloc, and strdup) References Barnes, J. (2005). Safe Pointers. AdaCore. Retrieved from: https://www.adacore.com/uploads_gems/03_safe_secure_ada_2005_safe_pointers.pdf. Computerphile (2017). Why C is so Influential? Retrieved from: https://www.youtube.com/watch?v=ci1PJexnfNE. Microsoft Docs (2020). Raw Pointers (C++). Microsoft Docs (2020). Smart Pointers (Modern C++). Microsoft Docs (2019). Object lifetime and resource management (RAII). Stroustrup, B. &amp; Sutter, H. (2021). C++ Core Guidelines. Retrieved from: http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#??? Stroustrup, B. (2013). The C++ programming language. Pearson Education." />
+<meta property="og:site_name" content="Explorations in Computer Science" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-08-12T00:00:00+08:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="On Pointer Types: Peeking at Reference Semantics" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","url":"/misc/2021/08/12/On-Pointer-Types.html","headline":"On Pointer Types: Peeking at Reference Semantics","dateModified":"2021-08-12T00:00:00+08:00","datePublished":"2021-08-12T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"/misc/2021/08/12/On-Pointer-Types.html"},"author":{"@type":"Person","name":"Dave Amiana"},"description":"In this article, I aim to introduce the concept and motivation behind using pointers. There are breeds of C++ developers that only use smart pointers for safety reasons, others that only use raw pointers for performance benefits, and some that use both whenever they provide the utmost benefits. In this article, I aim to highlight the use-cases of pointers so you can decide when to use one. Conceptually, a pointer is a kind of reference. That is, a pointer refers to a certain block of memory of which acts as an entry point. To access the contents or modify the value of a pointer, we dereference it. Many languages have pointer-like features. Our concern revolves around the context of C and C++. Note that all C functions are valid in C++ but the opposite is not true. For this reason, our section on smart pointers is only applicable to C++. Pointers are the basic structure to achieve reference semantics. Pointers are handy for naming another entity to be attributed by the contents of the referent entity. A pointer may access and manipulate the contents of the entity that it is pointed to, consider: int x = 5; int *y = &amp;x; *y = 10; Pointers are introduced in C for the following reasons: Inexpensive parameter passing. Allocate memory for new objects on the heap. Passing a function reference to a function. Iterate over data structures. The same thing is true in C++. In fact, iterators (a component for iterating over C++ Containers) resemble the interface of a pointer. But C++ has more to offer with a different set of modalities one can express reference semantics. We will focus on the set of reference modalities known as smart pointers. But before that, let us present a compelling reason for using smart pointers by enumerating the problems of raw pointers. Raw Pointers Raw pointers are low-level types that pertain to a certain block of memory. As mentioned, pointers are entry points to access a value or modify it in a specific location in memory. Some languages have restrictions on pointer types to a varying degree. For example, Ada initializes a default value of their pointer types to null and makes a restriction for type conversions involving pointers mostly for type safety. While languages like Java have banned the use of low-level pointer types to reduce programming error. Therein creeps in the subtle shades of pointers. Now we ask what is the scene of pointer types in C? In languages like C and C++, pointer types are very much used for low-level programming. Type conversion of pointer types has a varying degree of restrictions. In C, void * types are considered as raw pointer types which can be morphed into any type by an operation called typecasting. void* function(int&amp; i){return &amp;i; } int main(){ int i = 10; std::cout &lt;&lt; *((int*)function(i)); } The above snippet demonstrates that a void * type can be cast into an int *, or any type in that regard. Albeit not apparent with the above example, this is useful for abstraction which is a matter that we will not talk about here. Raw pointers are concrete implementation of the more abstract concept of reference. Unlike Ada, raw pointers in C/C++ are not initialized in a null value, although they can refer to null which is a safer way of using raw pointers: if not initialized with the address of a referent, initialize it with nullptr (in C++) and NULL (in C). The reason behind this is to achieve well-defined behavior and avoid bugs that can be very difficult to fix, let alone find. Raw pointers will not impose anything so misusing or abusing it are very easy to commit. The Dangling Problem: Let us consider an instance that we are likely to encounter the dangling pointer problem. Let’s take a look at allocating and deallocating resources using new and delete function in C++ and malloc (calloc) or free in C. int main(){ // (int*)malloc(sizeof(int)) or (int*)calloc(1, sizeof(int)) in C int* i = new int(100); std::cout &lt;&lt;&quot;contends of i: &quot;&lt;&lt; *i &lt;&lt; &#39;\\n&#39;; std::cout &lt;&lt;&quot;address of i: &quot; &lt;&lt; &amp;i &lt;&lt; &#39;\\n&#39;; // free(i) in C delete i; std::cout &lt;&lt;&quot;contents of i: &quot; &lt;&lt;*i &lt;&lt; &#39;\\n&#39;; std::cout &lt;&lt;&quot;address of i: &quot; &lt;&lt; &amp;i &lt;&lt; &#39;\\n&#39;; } Note that delete or free functions only removes the contents of an entity, in this case, i. That is, dereferencing i still returns the memory location of i before it was deleted. This is problematic for it may introduce undefined behavior: dereferencing to an already freed memory is dangerous. To resolve this, we have to make sure that the i references to a well-defined location in memory hence we put i = nullptr (in C++) and i = NULL (in C) after deleting the contents of i to avoid critical mistakes. int main(){ int* i = new int(100); std::cout &lt;&lt;&quot;contends of i: &quot;&lt;&lt; *i &lt;&lt; &#39;\\n&#39;; std::cout &lt;&lt;&quot;address of i: &quot; &lt;&lt; &amp;i &lt;&lt; &#39;\\n&#39;; delete i; i = nullptr; std::cout &lt;&lt;&quot;contents of i: &quot; &lt;&lt;*i &lt;&lt; &#39;\\n&#39;; std::cout &lt;&lt;&quot;address of i: &quot; &lt;&lt; &amp;i &lt;&lt; &#39;\\n&#39;; } Another problem comes with determining the owning pointer which can result in serious issues from resource leaks, undefined behaviors to security vulnerabilities. Which pointer is responsible for which entity? It is difficult to keep track of multiple references and make sure that at the end of the scope such references are correctly managed. There has to be a clear expression to determine the owning pointer. Because of this, C++ introduced a reference management system that revolves around the idea of RAII. Smart Pointers From the C++ Standard : Enforcing the lifetime safety profile eliminates leaks. When combined with resource safety provided by RAII, it eliminates the need for “garbage collection” (by generating no garbage). Combine this with enforcement of the type and bounds profiles and you get complete type- and resource-safety, guaranteed by tools. C++ introduced a set of classes for automatic resource management with very minimal to zero-cost performance penalties. Using these set of pointers has the following set of benefits: clarity of expressing ownership guarantees that resources will not leak When appropriate, we should be using smart pointers for clearly expressing our intent with the kind of ownership we want to establish between the pointer and the entity it refers to. We have three smart pointers: std::unique_ptr&lt;T&gt;, std::shared_ptr&lt;T&gt;, and std::weak_ptr&lt;T&gt;. We can access these modalities in the &lt;memory&gt; header file. Let us walk through and discover what these reference modalities have to offer. For our demonstration let us consider a class named Entity defined as: class Entity{ const char* str = &quot;message from Entity. \\n&quot;; public: Entity(){ std::cout &lt;&lt; &quot;Resources of Entity are acquired. \\n&quot;; } ~Entity(){ std::cout &lt;&lt; &quot;Resources of Entity is cleaned up. \\n&quot;; } const char* function(void){ return str; } }; Unique Pointer Unique pointer maintains that there is only one pointer responsible for a given resource in memory. The owning pointer is responsible for the clean-up and resource management. Let us define an instance of Entity. std::unique_ptr&lt;E&gt; e (new Entity()); Now, let us consider passing the pointer by reference and with move constructors to see its effect on where Entity is destroyed. Passing the unique pointer by reference means that the unique pointer is extended to a function, hence the clean-up happens after the unique pointer goes out of scope from the main function where it has been declared. void f(std::unique_ptr&lt;Entity&gt;&amp; entity){ std::cout &lt;&lt; entity-&gt;function(); } int main(){ std::unique_ptr&lt;Entity&gt; e(new Entity()); f(e); std::cout &lt;&lt; &quot;... \\n&quot;; } Resources of Entity are acquired. message from Entity. ... Resources of Entity is cleaned up. Passing the unique pointer with move constructors is transferring ownership to the unique pointer defined in function f(). We can notice the behavior has we run the following snippet: void f(std::unique_ptr&lt;Entity&gt; entity){ std::cout &lt;&lt; entity-&gt;function(); } int main(){ std::unique_ptr&lt;Entity&gt; e(new Entity()); f(std::move(e)); std::cout &lt;&lt; &quot;... \\n&quot;; } Resources of Entity are acquired. message from Entity. Resources of Entity is cleaned up. ... Since we transferred the ownership of e to entity, the clean-up happened as soon as the entity exits the function. Shared Pointer The shared pointer has an additional mechanism called reference counting where it keeps track of pointers that request for sharing resources. Each time another pointer asks for shared resources, the reference counter adds one and for every time it goes out of scope it removes one. At the time where the reference count is 0, it calls for the clean-up. We can observe this mechanism with the following code snippet: void f(std::shared_ptr&lt;Entity&gt; entity){ std::cout&lt;&lt;&quot;ref count: &quot; &lt;&lt; entity.use_count() &lt;&lt; &#39;\\n&#39;; std::cout &lt;&lt; entity-&gt;function(); } int main(){ std::shared_ptr&lt;Entity&gt; e(new Entity()); std::cout&lt;&lt;&quot;ref count: &quot; &lt;&lt; e.use_count() &lt;&lt; &#39;\\n&#39;; f(e); std::cout &lt;&lt; &quot;f went out of scope. \\n&quot;; std::cout &lt;&lt;&quot;ref count: &quot; &lt;&lt;e.use_count() &lt;&lt; &#39;\\n&#39;; std::cout &lt;&lt; &quot;... \\n&quot;; } Resources of Entity are acquired. ref count: 1 ref count: 2 message from Entity. f went out of scope. ref count: 1 ... Resources of Entity is cleaned up. When I first encountered this, I thought that is all I need, unique pointers and shared pointers are all there is to it. Until I encountered this problem called circular references where the troubles of shared references kick in. It is possible to break the guarantees of the shared pointer by forming a loop of circular references which results in resource leaks. The Circular Reference Problem A circular reference has the form $A \\to B$, $B\\to A$. Let us put this into code. struct B; struct A{ std::shared_ptr&lt;B&gt; ab; A(){ std::cout &lt;&lt; &quot;Resources of A are acquired. \\n&quot;; } ~A(){ std::cout &lt;&lt; &quot;Resources of A are cleaned up. \\n&quot;; } }; struct B{ std::shared_ptr&lt;A&gt; ba; B(){ std::cout &lt;&lt; &quot;Resources of B are acquired. \\n&quot;; } ~B(){ std::cout &lt;&lt; &quot;Resources of B are cleaned up. \\n&quot;; } }; int main(){ std::shared_ptr&lt;A&gt; sa (new A()); std::shared_ptr&lt;B&gt; sb (new B()); sa-&gt;ab=sb; sb-&gt;ba=sa; } Resources of A are acquired. Resources of B are acquired. Since $A \\to B$ and $B \\to A$, the reference count will never resolve to zero – the condition which std::shared_ptr&lt;T&gt; does its clean-up. We can observe the reference counts by theuse_count() function. Let is modify the main function: int main(){ std::shared_ptr&lt;A&gt; sa (new A()); std::shared_ptr&lt;B&gt; sb (new B()); sa-&gt;ab=sb; std::cout &lt;&lt; &quot;count of ab: &quot; &lt;&lt; sa-&gt;ab.use_count() &lt;&lt; &#39;\\n&#39;; sb-&gt;ba=sa; std::cout &lt;&lt; &quot;count of ba: &quot; &lt;&lt; sb-&gt;ba.use_count() &lt;&lt; &#39;\\n&#39;; } Resources of A are acquired. Resources of B are acquired. count of ab: 2 count of ba: 2 How do we break the curse? Introducing Weak Pointers. Weak Pointer A weak pointer is a special type of pointer in conjunction with shared pointers. With weak pointers, you can access the contents of the shared pointer without increasing the reference count. This is useful for observing the contents of a shared resource and most notably resolving the problem of circular reference. Let us solve the problem of circular reference through weak pointers. This can be achieved by modifying either A::ab or B::ba pointers. struct A{ std::shared_ptr&lt;B&gt; ab; A(){ std::cout &lt;&lt; &quot;Resources of A are acquired. \\n&quot;; } ~A(){ std::cout &lt;&lt; &quot;Resources of A are cleaned up. \\n&quot;; } }; struct B{ std::weak_ptr&lt;A&gt; ba; B(){ std::cout &lt;&lt; &quot;Resources of B are acquired. \\n&quot;; } ~B(){ std::cout &lt;&lt; &quot;Resources of B are cleaned up. \\n&quot;; } }; int main(){ std::shared_ptr&lt;A&gt; sa (new A()); std::shared_ptr&lt;B&gt; sb (new B()); sa-&gt;ab=sb; std::cout &lt;&lt; &quot;count of ab: &quot; &lt;&lt; sa-&gt;ab.use_count() &lt;&lt; &#39;\\n&#39;; sb-&gt;ba=sa; std::cout &lt;&lt; &quot;count of ba: &quot; &lt;&lt; sb-&gt;ba.use_count() &lt;&lt; &#39;\\n&#39;; } Resources of A are acquired. Resources of B are acquired. count of ab: 2 count of ba: 1 Resources of A are cleaned up. Resources of B are cleaned up. Summary C++ does not use automatic reference management by default following their design philosophy of the zero-overhead principle. One can enable automatic reference management in C++ by making use of smart pointers defined in the standard library. It gives you resource guarantees and safety. Other languages such as Swift and Rust have adhered to the same concept instead of making sophisticated garbage collectors, they do not produce any garbage at all. This memory management model makes a very compelling case of using smart pointers. But raw pointers still have their brightest moments up to date. Prefer using pointers for performance-critical loops or when the scope is clear enough to determine which is the owning pointer for a given resource. Raw pointers give you few performance benefits, but it comes with the cost of manually keeping track of your pointers, resource safety becomes your responsibility. Prefer using smart pointers for expressing ownership clearly. Smart pointers give you resource guarantees which get rid of your task to make sure that there will be no leaks. The standard recommends the following: Look at pointers: Classify them into non-owners (the default) and owners. Where feasible, replace owners with standard-library resource handles (as in the example above). Alternatively, mark an owner as such using owner from the GSL. Look for naked new and delete Look for known resource allocating functions returning raw pointers (such as fopen, malloc, and strdup) References Barnes, J. (2005). Safe Pointers. AdaCore. Retrieved from: https://www.adacore.com/uploads_gems/03_safe_secure_ada_2005_safe_pointers.pdf. Computerphile (2017). Why C is so Influential? Retrieved from: https://www.youtube.com/watch?v=ci1PJexnfNE. Microsoft Docs (2020). Raw Pointers (C++). Microsoft Docs (2020). Smart Pointers (Modern C++). Microsoft Docs (2019). Object lifetime and resource management (RAII). Stroustrup, B. &amp; Sutter, H. (2021). C++ Core Guidelines. Retrieved from: http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#??? Stroustrup, B. (2013). The C++ programming language. Pearson Education.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Explorations in Computer Science" />
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/%20/">Explorations in Computer Science</a><nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+      <label for="nav-trigger">
+        <span class="menu-icon">
+          <svg viewBox="0 0 18 15" width="18px" height="15px">
+            <path
+              d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z" />
+          </svg>
+        </span>
+      </label>
+
+      <div class="trigger"><a class="page-link" href="/about/">About my Blogs</a></div>
+    </nav>
+    <script type="text/x-mathjax-config">
+                MathJax.Hub.Config({
+                TeX: { equationNumbers: { autoNumber: "AMS" } }
+                });
+              </script>
+    <script type="text/javascript" async
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+  </div>
+</header><main class="page-content" aria-label="Content">
+    <div class="wrapper">
+      <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">On Pointer Types: Peeking at Reference Semantics</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2021-08-12T00:00:00+08:00" itemprop="datePublished">
+        Aug 12, 2021
+      </time>• 
+      <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-author h-card" itemprop="name">Dave Amiana</span></span></p>
+    
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>In this article, I aim to introduce the concept and motivation behind using pointers. There are breeds of C++ developers that only use smart pointers for safety reasons, others that only use raw pointers for performance benefits, and some that use both whenever they provide the utmost benefits. In this article, I aim to highlight the use-cases of pointers so you can decide when to use one.</p>
+
+<hr />
+<p>Conceptually, a pointer is a kind of reference. That is, a pointer refers to a certain block of memory of which acts as an entry point. To access the contents or modify the value of a pointer, we <em>dereference</em> it. Many languages have pointer-like features. Our concern revolves around the context of C and C++. Note that all C functions are valid in C++ but the opposite is not true. For this reason, our section on smart pointers is only applicable to C++.</p>
+
+<p>Pointers are the basic structure to achieve reference semantics. Pointers are handy for naming another entity to be attributed by the contents of the referent entity. A pointer may access and manipulate the contents of the entity that it is <em>pointed</em> to, consider:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>int x = 5;
+int *y = &amp;x;
+*y = 10; 
+</code></pre></div></div>
+
+<p>Pointers are introduced in C for the following reasons:</p>
+<ul>
+  <li>Inexpensive parameter passing.</li>
+  <li>Allocate memory for new objects on the heap.</li>
+  <li>Passing a function reference to a function.</li>
+  <li>Iterate over data structures.</li>
+</ul>
+
+<p>The same thing is true in C++. In fact, iterators (a component for iterating over C++ Containers) resemble the interface of a pointer. But C++ has more to offer with a different set of modalities one can express reference semantics. We will focus on the set of reference modalities known as smart pointers. But before that, let us present a compelling reason for using smart pointers by enumerating the problems of raw pointers.</p>
+
+<h2 id="raw-pointers">Raw Pointers</h2>
+<p>Raw pointers are low-level types that pertain to a certain block of memory. As mentioned, pointers are entry points to access a value or modify it in a specific location in memory.</p>
+
+<p>Some languages have restrictions on pointer types to a varying degree. For example,  <a href="https://www.adacore.com/uploads_gems/03_safe_secure_ada_2005_safe_pointers.pdf">Ada</a> initializes a default value of their pointer types to null and makes a restriction for type conversions involving pointers mostly for type safety. While languages like <a href="https://www.youtube.com/watch?v=ci1PJexnfNE">Java </a> have banned the use of low-level pointer types to reduce programming error.</p>
+
+<p>Therein creeps in the subtle shades of pointers. Now we ask what is the scene of pointer types in C?</p>
+
+<p>In languages like C and C++, pointer types are very much used for low-level programming. Type conversion of pointer types has a varying degree of restrictions.  In C, <code class="language-plaintext highlighter-rouge">void *</code> types are considered as raw pointer types which can be morphed into any type by an operation called typecasting.</p>
+
+<pre><code class="language-C++">void* function(int&amp; i){return &amp;i; }
+
+int main(){
+    int i = 10;
+    std::cout &lt;&lt; *((int*)function(i));
+}
+</code></pre>
+<p>The above snippet demonstrates that a <code class="language-plaintext highlighter-rouge">void *</code> type can be cast into an <code class="language-plaintext highlighter-rouge">int *</code>, or <em>any</em> type in that regard. Albeit not apparent with the above example, this is useful for abstraction which is a matter that we will not talk about here.</p>
+
+<p>Raw pointers are concrete implementation of the more abstract concept of reference. Unlike Ada, raw pointers in C/C++ are not initialized in a null value, although they can refer to null which is a safer way of using raw pointers: if not initialized with the address of a referent, initialize it with <code class="language-plaintext highlighter-rouge">nullptr</code> (in C++) and <code class="language-plaintext highlighter-rouge">NULL</code> (in C). The reason behind this is to achieve well-defined behavior and avoid bugs that can be very difficult to fix, let alone find.</p>
+
+<p>Raw pointers will not impose anything so misusing or abusing it are very easy to commit.</p>
+
+<h3 id="the-dangling-problem">The Dangling Problem:</h3>
+<p>Let us consider an instance that we are likely to encounter the dangling pointer problem. Let’s take a look at allocating and deallocating resources using <code class="language-plaintext highlighter-rouge">new</code> and <code class="language-plaintext highlighter-rouge">delete</code> function in C++ and <code class="language-plaintext highlighter-rouge">malloc</code> (<code class="language-plaintext highlighter-rouge">calloc</code>) or <code class="language-plaintext highlighter-rouge">free</code> in C.</p>
+<pre><code class="language-C++">int main(){
+    // (int*)malloc(sizeof(int)) or (int*)calloc(1, sizeof(int)) in C
+    int* i = new int(100); 
+    std::cout &lt;&lt;"contends of i: "&lt;&lt;  *i &lt;&lt; '\n';
+    std::cout &lt;&lt;"address of i: " &lt;&lt; &amp;i &lt;&lt; '\n';
+    // free(i) in C
+    delete i;
+    std::cout &lt;&lt;"contents of i: " &lt;&lt;*i &lt;&lt; '\n';
+    std::cout &lt;&lt;"address of i: " &lt;&lt; &amp;i &lt;&lt; '\n';
+}
+</code></pre>
+<p>Note that <code class="language-plaintext highlighter-rouge">delete</code> or <code class="language-plaintext highlighter-rouge">free</code> functions only <em>removes</em> the contents of an entity, in this case, <code class="language-plaintext highlighter-rouge">i</code>. That is, dereferencing <code class="language-plaintext highlighter-rouge">i</code> still returns the memory location of <code class="language-plaintext highlighter-rouge">i</code> before it was deleted. This is problematic for it may introduce undefined behavior: dereferencing to an already freed memory is dangerous. To resolve this, we have to make sure that the <code class="language-plaintext highlighter-rouge">i</code> references to a well-defined location in memory hence we put <code class="language-plaintext highlighter-rouge">i = nullptr</code> (in C++) and <code class="language-plaintext highlighter-rouge">i = NULL</code> (in C) after deleting the contents of <code class="language-plaintext highlighter-rouge">i</code> to avoid critical mistakes.</p>
+
+<pre><code class="language-C++">int main(){
+    int* i = new int(100);
+    std::cout &lt;&lt;"contends of i: "&lt;&lt;  *i &lt;&lt; '\n';
+    std::cout &lt;&lt;"address of i: " &lt;&lt; &amp;i &lt;&lt; '\n';
+    delete i;
+    i = nullptr;
+    std::cout &lt;&lt;"contents of i: " &lt;&lt;*i &lt;&lt; '\n';
+    std::cout &lt;&lt;"address of i: " &lt;&lt; &amp;i &lt;&lt; '\n';
+}
+</code></pre>
+
+<p>Another problem comes with determining the owning pointer which can result in serious issues from resource leaks, undefined behaviors to security vulnerabilities. Which pointer is responsible for which entity? It is difficult to keep track of multiple references and make sure that at the end of the scope such references are correctly managed. There has to be a clear expression to determine the owning pointer. Because of this, C++ introduced a reference management system that revolves around the idea of  <a href="https://docs.microsoft.com/en-us/cpp/cpp/object-lifetime-and-resource-management-modern-cpp?view=msvc-160">RAII</a>.</p>
+
+<h2 id="smart-pointers">Smart Pointers</h2>
+
+<p>From the  <a href="http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#???">C++ Standard</a> :</p>
+<blockquote>
+  <p>Enforcing the lifetime safety profile eliminates leaks. When combined with resource safety provided by RAII, it eliminates the need for “garbage collection” (by generating no garbage). Combine this with enforcement of the type and bounds profiles and you get complete type- and resource-safety, guaranteed by tools.</p>
+</blockquote>
+
+<p>C++ introduced a set of classes for automatic resource management with very minimal to <strong>zero-cost</strong> performance penalties. Using these set of pointers has the following set of benefits:</p>
+<ul>
+  <li>clarity of expressing ownership</li>
+  <li>guarantees that resources will not leak</li>
+</ul>
+
+<p>When appropriate, we should be using smart pointers for clearly expressing our intent with the kind of ownership we want to establish between the pointer and the entity it refers to. We have three smart pointers: <code class="language-plaintext highlighter-rouge">std::unique_ptr&lt;T&gt;</code>, <code class="language-plaintext highlighter-rouge">std::shared_ptr&lt;T&gt;</code>, and <code class="language-plaintext highlighter-rouge">std::weak_ptr&lt;T&gt;</code>. We can access these modalities in the <code class="language-plaintext highlighter-rouge">&lt;memory&gt;</code> header file.</p>
+
+<p>Let us walk through and discover what these reference modalities have to offer. For our demonstration let us consider a class named <code class="language-plaintext highlighter-rouge">Entity</code> defined as:</p>
+
+<pre><code class="language-C++">class Entity{
+    const char* str = "message from Entity. \n";
+    public:
+        Entity(){ std::cout &lt;&lt; "Resources of Entity are acquired. \n"; }
+        ~Entity(){ std::cout &lt;&lt; "Resources of Entity is cleaned up. \n"; }
+        
+        const char* function(void){ return str; }
+};
+</code></pre>
+
+<h3 id="unique-pointer">Unique Pointer</h3>
+<p>Unique pointer maintains that there is only one pointer responsible for a given resource in memory. The owning pointer is responsible for the clean-up and resource management.</p>
+
+<p>Let us define an instance of <code class="language-plaintext highlighter-rouge">Entity</code>.</p>
+<pre><code class="language-C++">std::unique_ptr&lt;E&gt; e (new Entity());
+</code></pre>
+<p>Now, let us consider passing the pointer by reference and with move constructors to see its effect on where <code class="language-plaintext highlighter-rouge">Entity</code> is destroyed. Passing the unique pointer by reference means that the unique pointer is extended to a function, hence the clean-up happens after the unique pointer goes out of scope from the main function where it has been declared.</p>
+<pre><code class="language-C++">void f(std::unique_ptr&lt;Entity&gt;&amp; entity){
+    std::cout &lt;&lt; entity-&gt;function();
+}
+
+int main(){
+    std::unique_ptr&lt;Entity&gt; e(new Entity());
+    f(e);
+    std::cout &lt;&lt; "... \n";
+}
+</code></pre>
+<pre><code class="language-Bash">Resources of Entity are acquired.
+message from Entity.
+...
+Resources of Entity is cleaned up.
+</code></pre>
+<p>Passing the unique pointer with move constructors is transferring ownership to the unique pointer defined in function <code class="language-plaintext highlighter-rouge">f()</code>. We can notice the behavior has we run the following snippet:</p>
+<pre><code class="language-C++">void f(std::unique_ptr&lt;Entity&gt; entity){
+    std::cout &lt;&lt; entity-&gt;function();
+}
+
+int main(){
+    std::unique_ptr&lt;Entity&gt; e(new Entity());
+    f(std::move(e));
+    std::cout &lt;&lt; "... \n";
+}
+</code></pre>
+
+<pre><code class="language-Bash">Resources of Entity are acquired.
+message from Entity.
+Resources of Entity is cleaned up.
+...
+</code></pre>
+<p>Since we transferred the ownership of <code class="language-plaintext highlighter-rouge">e</code> to <code class="language-plaintext highlighter-rouge">entity</code>, the clean-up happened as soon as the entity exits the function.</p>
+
+<h3 id="shared-pointer">Shared Pointer</h3>
+<p>The shared pointer has an additional mechanism called reference counting where it keeps track of pointers that request for sharing resources. Each time another pointer asks for shared resources, the reference counter adds one and for every time it goes out of scope it removes one. At the time where the reference count is 0, it calls for the clean-up. We can observe this mechanism with the following code snippet:</p>
+
+<pre><code class="language-C++">void f(std::shared_ptr&lt;Entity&gt; entity){
+	std::cout&lt;&lt;"ref count: " &lt;&lt; entity.use_count() &lt;&lt; '\n';
+    std::cout &lt;&lt; entity-&gt;function();
+}
+
+int main(){
+    std::shared_ptr&lt;Entity&gt; e(new Entity());
+    std::cout&lt;&lt;"ref count: " &lt;&lt; e.use_count() &lt;&lt; '\n';
+    f(e);
+    std::cout &lt;&lt; "f went out of scope. \n";
+    std::cout &lt;&lt;"ref count: " &lt;&lt;e.use_count() &lt;&lt; '\n';
+    std::cout &lt;&lt; "... \n";
+}
+</code></pre>
+<pre><code class="language-Bash">Resources of Entity are acquired.
+ref count: 1
+ref count: 2
+message from Entity.
+f went out of scope.
+ref count: 1
+...
+Resources of Entity is cleaned up.
+</code></pre>
+
+<p>When I first encountered this, I thought that is all I need, unique pointers and shared pointers are all there is to it. Until I encountered this problem called <strong>circular references</strong> where the troubles of shared references kick in. It is possible to break the guarantees of the shared pointer by forming a loop of circular references which results in resource leaks.</p>
+
+<h4 id="the-circular-reference-problem">The Circular Reference Problem</h4>
+<p>A circular reference has the form $A \to B$, $B\to A$. Let us put this into code.</p>
+
+<pre><code class="language-C++">struct B;
+
+struct A{
+	std::shared_ptr&lt;B&gt; ab;
+	A(){ std::cout &lt;&lt; "Resources of A are acquired. \n"; }
+	~A(){ std::cout &lt;&lt; "Resources of A are cleaned up. \n"; }
+};
+
+
+struct B{
+	std::shared_ptr&lt;A&gt; ba;
+	B(){ std::cout &lt;&lt; "Resources of B are acquired. \n"; }
+	~B(){ std::cout &lt;&lt; "Resources of B are cleaned up. \n"; }
+};
+
+int main(){
+    std::shared_ptr&lt;A&gt; sa (new A());
+    std::shared_ptr&lt;B&gt; sb (new B());
+    
+	sa-&gt;ab=sb;
+	sb-&gt;ba=sa;
+}
+</code></pre>
+
+<pre><code class="language-Bash">Resources of A are acquired.
+Resources of B are acquired.
+</code></pre>
+<p>Since $A \to B$ and $B \to A$, the reference count will never resolve to zero – the condition which <code class="language-plaintext highlighter-rouge">std::shared_ptr&lt;T&gt;</code> does its clean-up. We can observe the reference counts by the<code class="language-plaintext highlighter-rouge">use_count()</code> function. Let is modify the main function:</p>
+<pre><code class="language-C++">int main(){
+    std::shared_ptr&lt;A&gt; sa (new A());
+    std::shared_ptr&lt;B&gt; sb (new B());
+    
+	sa-&gt;ab=sb;
+	std::cout &lt;&lt; "count of ab: " &lt;&lt; sa-&gt;ab.use_count() &lt;&lt; '\n';
+	sb-&gt;ba=sa;
+	std::cout &lt;&lt; "count of ba: " &lt;&lt; sb-&gt;ba.use_count() &lt;&lt; '\n';
+}
+</code></pre>
+<pre><code class="language-Bash">Resources of A are acquired.
+Resources of B are acquired.
+count of ab: 2
+count of ba: 2
+</code></pre>
+
+<p><strong>How do we break the curse?</strong> Introducing Weak Pointers.</p>
+
+<h3 id="weak-pointer">Weak Pointer</h3>
+<p>A weak pointer is a special type of pointer in conjunction with shared pointers. With weak pointers, you can access the contents of the shared pointer without increasing the reference count. This is useful for observing the contents of a shared resource and most notably resolving the problem of circular reference.</p>
+
+<p>Let us solve the problem of circular reference through weak pointers. This can be achieved by modifying either <code class="language-plaintext highlighter-rouge">A::ab</code> or <code class="language-plaintext highlighter-rouge">B::ba</code> pointers.</p>
+
+<pre><code class="language-C++">struct A{
+	std::shared_ptr&lt;B&gt; ab;
+	A(){ std::cout &lt;&lt; "Resources of A are acquired. \n"; }
+	~A(){ std::cout &lt;&lt; "Resources of A are cleaned up. \n"; }
+		
+};
+
+
+struct B{
+	std::weak_ptr&lt;A&gt; ba;
+	B(){ std::cout &lt;&lt; "Resources of B are acquired. \n"; }
+	~B(){ std::cout &lt;&lt; "Resources of B are cleaned up. \n"; }
+};
+
+int main(){
+    std::shared_ptr&lt;A&gt; sa (new A());
+    std::shared_ptr&lt;B&gt; sb (new B());
+    
+	sa-&gt;ab=sb;
+	std::cout &lt;&lt; "count of ab: " &lt;&lt; sa-&gt;ab.use_count() &lt;&lt; '\n';
+	sb-&gt;ba=sa;
+	std::cout &lt;&lt; "count of ba: " &lt;&lt; sb-&gt;ba.use_count() &lt;&lt; '\n';
+}
+</code></pre>
+<pre><code class="language-Bash">Resources of A are acquired.
+Resources of B are acquired.
+count of ab: 2
+count of ba: 1
+Resources of A are cleaned up.
+Resources of B are cleaned up.
+</code></pre>
+
+<hr />
+<h2 id="summary">Summary</h2>
+
+<p>C++ does not use automatic reference management by default following their design philosophy of the  <a href="https://bit.ly/2VMyrka">zero-overhead principle</a>. One can enable automatic reference management in C++ by making use of smart pointers defined in the standard library. It gives you resource guarantees and safety. Other languages such as  <a href="https://bit.ly/3s9LNTI">Swift</a> and  <a href="https://bit.ly/2U8hlwM">Rust</a>  have adhered to the same concept instead of making sophisticated garbage collectors, they do not produce any garbage at all. This memory management model makes a very compelling case of using smart pointers. But raw pointers still have their brightest moments up to date.</p>
+
+<p>Prefer using pointers for performance-critical loops or when the scope is clear enough to determine which is the owning pointer for a given resource. Raw pointers give you few performance benefits, but it comes with the cost of manually keeping track of your pointers, resource safety becomes your responsibility.</p>
+
+<p>Prefer using smart pointers for expressing ownership clearly. Smart pointers give you resource guarantees which get rid of your task to make sure that there will be no leaks.</p>
+
+<p>The  <a href="http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#???">standard</a>  recommends the following:</p>
+<ul>
+  <li>Look at pointers: Classify them into non-owners (the default) and owners. Where feasible, replace owners with standard-library resource handles (as in the example above). Alternatively, mark an owner as such using owner from the  <a href="http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#S-gsl">GSL</a>.</li>
+  <li>Look for naked <code class="language-plaintext highlighter-rouge">new</code> and <code class="language-plaintext highlighter-rouge">delete</code></li>
+  <li>Look for known resource allocating functions returning raw pointers (such as <code class="language-plaintext highlighter-rouge">fopen</code>, <code class="language-plaintext highlighter-rouge">malloc</code>, and <code class="language-plaintext highlighter-rouge">strdup</code>)</li>
+</ul>
+
+<hr />
+<h2 id="references">References</h2>
+<ol>
+  <li>Barnes, J. (2005). Safe Pointers. AdaCore. Retrieved from: https://www.adacore.com/uploads_gems/03_safe_secure_ada_2005_safe_pointers.pdf.</li>
+  <li>Computerphile (2017). Why C is so Influential? Retrieved from: https://www.youtube.com/watch?v=ci1PJexnfNE.</li>
+  <li>Microsoft Docs (2020). Raw Pointers (C++).</li>
+  <li>Microsoft Docs (2020). Smart Pointers (Modern C++).</li>
+  <li>Microsoft Docs (2019). Object lifetime and resource management (RAII).</li>
+  <li>Stroustrup, B. &amp; Sutter, H. (2021). C++ Core Guidelines. Retrieved from: http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#???</li>
+  <li>Stroustrup, B. (2013). The C++ programming language. Pearson Education.</li>
+</ol>
+
+
+  </div><a class="u-url" href="/misc/2021/08/12/On-Pointer-Types.html" hidden></a>
+</article>
+    </div>
+  </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Dave Amiana</li>
+          <li><a class="u-email" href="mailto:amiana.dave@gmail.com">amiana.dave@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>Where I blog about Computer Science
+</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/adeeconometrics" title="adeeconometrics"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/iamdeb25" title="iamdeb25"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg></a></li><li><a href="https://dev.to/iamdeb25" title="iamdeb25"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#devto"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
