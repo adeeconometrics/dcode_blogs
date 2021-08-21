@@ -185,7 +185,7 @@ Resources of Entity is cleaned up.
 When I first encountered this, I thought that is all I need, unique pointers and shared pointers are all there is to it. Until I encountered this problem called **circular references** where the troubles of shared references kick in. It is possible to break the guarantees of the shared pointer by forming a loop of circular references which results in resource leaks.
 
 #### The Circular Reference Problem
-A circular reference has the form $A \to B$, $B\to A$. Let us put this into code.
+A circular reference has the form $A \to B$, $B \to A$. Let us put this into code.
 
 ```C++
 struct B;

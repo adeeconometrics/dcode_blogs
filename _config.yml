@@ -28,8 +28,6 @@ header_pages:
 
 # Build settings
 theme: minima
-
-
 markdown: kramdown
 kramdown:
   math_engine: mathjax
